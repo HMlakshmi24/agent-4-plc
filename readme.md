@@ -47,5 +47,35 @@ to adjust multi-agent system, enhance ability of certain agents and reproduce ex
 | MapCoder    | [MapCoder: Multi-Agent Code Generation for Competitive Problem Solving](https://arxiv.org/abs/2405.11403) |
 
 
+# 📦 Installation & Setup
+
+- ### Clone the Repository
+  > git clone
+
+  > cd agent-4-plc
+
+- ### Create virtual environment
+  > Install python 3.10.0 from website.
+
+  > py -3.10 -m venv venv
+
+- ### To Activate virtual environment for (Windows)
+  > venv\Scripts\activate
+
+- ### Install all the dependencies in virtual environment
+  > pip install -r requirements.txt
+
+- ### Run Backend
+  > uvicorn backend.main:app --reload
+
+- ### Run Frontend
+  > cd Frontend
+
+  > npm install
+
+  > npm run dev
+
+
+
 
 

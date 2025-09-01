@@ -1,0 +1,71 @@
+.hero-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.hero-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* ensures no gap, fills screen */
+}
+
+.blinking-card {
+  position: absolute;
+  top: 40%;
+  left: 10%;
+  transform: translateY(-50%);
+  color: white;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 2rem;
+  border-radius: 10px;
+  max-width: 80%;
+}
+
+.blinking-card h1 {
+  font-size: 3rem;
+}
+
+.blinking-card p {
+  font-size: 1.2rem;
+}
+
+/* 📱 Mobile responsiveness */
+@media (max-width: 768px) {
+  .blinking-card {
+    top: 50%;
+    left: 5%;
+    padding: 1rem;
+    max-width: 90%;
+  }
+
+  .blinking-card h1 {
+    font-size: 2rem;
+  }
+
+  .blinking-card p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .blinking-card {
+    top: 50%;
+    left: 5%;
+    padding: 0.8rem;
+    border-radius: 8px;
+    max-width: 95%;
+  }
+
+  .blinking-card h1 {
+    font-size: 1.5rem;
+  }
+
+  .blinking-card p {
+    font-size: 0.9rem;
+  }
+}

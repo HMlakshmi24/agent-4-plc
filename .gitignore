@@ -24,5 +24,20 @@ prompts/verify_agent_old
 /workspace/
 
 
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
+# Build
+/build
+/dist
+
+# Environment
+venv/
+
+# System
+.DS_Store
+Thumbs.db
 

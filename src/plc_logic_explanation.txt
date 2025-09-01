@@ -1,0 +1,65 @@
+Sure, I will guide you through creating Structured Text (ST) code for the Siemens S7-1200 PLC based on your requirements. Here’s how you can structure the code:
+
+### Variable Declarations
+
+Before implementing the logic, you will need to declare the variables in the TIA Portal environment following your mappings:
+
+```plaintext
+// Variable Declarations
+VAR
+    TankLevel : REAL;
+    OutletValve : BOOL;
+    InletValve : BOOL;
+    Pump : BOOL;
+END_VAR
+```
+
+### Logic Implementation
+
+Next, you will write the logic using the Siemens ST syntax with IF / ELSE statements, ensuring each logic block ends with an `END_IF`.
+
+```plaintext
+// Implementing Tank Control Logic
+
+// Logic for Outlet Valve
+IF TankLevel > 80.0 THEN
+    OutletValve := TRUE;
+ELSE
+    OutletValve := FALSE;
+END_IF;
+
+// Logic for Inlet Valve and Pump
+IF TankLevel < 20.0 THEN
+    InletValve := TRUE;
+    Pump := TRUE;
+ELSE
+    InletValve := FALSE;
+    Pump := FALSE;
+END_IF;
+```
+
+### Explanation
+
+1. **Tank Level Check for Outlet Valve**: 
+   - When the `TankLevel` is greater than 80.0, the `OutletValve` is opened (`TRUE`).
+   - Otherwise, it remains closed (`FALSE`).
+
+2. **Tank Level Check for Inlet Valve and Pump**:
+   - When the `TankLevel` is less than 20.0, both the `InletValve` and `Pump` are activated (`TRUE`).
+   - Otherwise, both are deactivated (`FALSE`).
+
+3. **Middle Range Handling**:
+   - If the tank level is between 20.0 and 80.0, all outputs are set to `FALSE` due to the `ELSE` conditions setting them to `FALSE`.
+
+### Testing and Verification
+
+1. **Simulation at 10% (TankLevel = 10.0)**: 
+   - The `InletValve` and `Pump` should be `TRUE`.
+
+2. **Simulation at 50% (TankLevel = 50.0)**:
+   - All outputs (`OutletValve`, `InletValve`, and `Pump`) should be `FALSE`.
+
+3. **Simulation at 90% (TankLevel = 90.0)**:
+   - The `OutletValve` should be `TRUE`.
+
+Ensure to map these variables to the corresponding hardware addresses in the PLC tag table for real-world scenarios as per your provided mapping. This code should compile and work as expected in the Siemens TIA Portal environment for simulation and implementation.
