@@ -1,27 +1,50 @@
-To count from 1 to 10 in a Mitsubishi FX/ST PLC using ladder logic, you would follow these steps to create a simple program using basic instructions. Here's how you can set it up:
+Here's a Structured Text (ST) code template for the Siemens S7-1200 PLC, following your guidelines:
 
-1. **Initialize the Counter:**
-   - Use a Reset (R) instruction to ensure your counter starts from zero. You might use a contact that triggers a reset, such as a start button or an initial power-up signal. The instruction would look like `R C0`, where C0 is the counter you're using.
+```structured-text
+// Declare variables
+VAR
+    TankLevel : REAL;        // Mapped to %MW10
+    OutletValve : BOOL;      // Mapped to %Q0.0
+    InletValve : BOOL;       // Mapped to %Q0.1
+    Pump : BOOL;             // Mapped to %Q0.2
+END_VAR
 
-2. **Set Up Counter Logic:**
-   - Insert a normally open contact (NO) that represents the condition under which the counter should increment. This could be a sensor input or a pulse from a clock signal. Let's assume you're using an input on `X0`.
-   - The actual counting will occur in a `C` (Counter) instruction. For example, `C0 K10` where C0 is the counter number and K10 is the target count of 10.
+// Logic to control the OutletValve based on TankLevel
+IF TankLevel > 80.0 THEN
+    OutletValve := TRUE;
+ELSE
+    OutletValve := FALSE;
+END_IF;
 
-3. **Example Ladder Logic:**
+// Logic to control the InletValve and Pump based on TankLevel
+IF TankLevel < 20.0 THEN
+    InletValve := TRUE;
+    Pump := TRUE;
+ELSE
+    InletValve := FALSE;
+    Pump := FALSE;
+END_IF;
 
-   ```
-   --| X0 |--------------[ C C0 K10 ]
-   --| C0 |--------------( Y0 )
-   --| F1 |--------------[ R C0 ]
-   ```
+// Ensure all valves and pump are off when TankLevel is between 20 and 80
+IF TankLevel >= 20.0 AND TankLevel <= 80.0 THEN
+    OutletValve := FALSE;
+    InletValve := FALSE;
+    Pump := FALSE;
+END_IF;
+```
 
-   - **X0:** Represents the input that triggers the counter to increment each time it's activated.
-   - **C C0 K10:** This instruction counts up every time `X0` is activated until it reaches 10. `C0` is the counter's memory location.
-   - **|C0|---(Y0):** Once C0 reaches the count of 10, it will energize output Y0, which can be used for further processing, like turning on a light or activating another part of the system.
-   - **F1:** A normally open contact for a reset function. When activated, it will reset the counter back to 0. This could be connected to a reset button or another control signal.
+### Explanation:
 
-4. **Additional Considerations:**
-   - Ensure your PLC cycle time is appropriate for your count speed. Debounce your inputs if necessary to avoid false counting from noisy signals.
-   - You might need to consider whether and how to handle the counter roll-over, depending on the application.
+1. **Variable Declaration**: Variables for the tank control are declared at the beginning, as specified. These include `TankLevel`, `OutletValve`, `InletValve`, and `Pump`.
 
-This simple implementation should allow your PLC to count signals or events between 1 and 10 and activate an output based on this logic. Remember, this is a basic guide and might require adjustments based on your specific application and equipment needs.
+2. **Logic Implementation**:
+   - **OutletValve**: When `TankLevel` is greater than 80.0, `OutletValve` is set to `TRUE`; otherwise, it is set to `FALSE`.
+   - **InletValve and Pump**: When `TankLevel` is less than 20.0, both `InletValve` and `Pump` are set to `TRUE`. Otherwise, they are set to `FALSE`.
+   - **Intermediate Range (20.0 to 80.0)**: In this range, all devices (`OutletValve`, `InletValve`, `Pump`) are explicitly set to `FALSE` to ensure no unintended behavior.
+
+3. **End Conditions**: Each conditional block is closed with `END_IF` to properly structure the logic.
+
+This code should compile successfully in TIA Portal. In simulation:
+- At `TankLevel = 10.0`, both `InletValve` and `Pump` should be `TRUE`.
+- At `TankLevel = 50.0`, all outputs should be `FALSE`.
+- At `TankLevel = 90.0`, `OutletValve` should be `TRUE`.
