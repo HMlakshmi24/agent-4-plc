@@ -36,6 +36,16 @@ const PlcGenerator = () => {
     window.location.href = "http://127.0.0.1:8000/download/";
   };
 
+  // Handle Try Now click
+  const handleTryNow = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please login first!");
+      return;
+    }
+    setShowModal(true);
+  };
+
   return (
     <div className="plc-section">
       <div className="plc-text">
@@ -52,7 +62,7 @@ const PlcGenerator = () => {
           className="plc-generate-btn"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => setShowModal(true)}
+          onClick={handleTryNow}
         >
           Try Now
         </motion.button>
@@ -100,9 +110,9 @@ const PlcGenerator = () => {
                 </>
               ) : (
                 <div className="plc-success">
-                  <p>✅ Your ST code has been generated successfully!</p>
+                  <p>✅ Your code has been generated successfully!</p>
                   <button className="download-btn" onClick={handleDownload}>
-                    Download ST Code
+                    Download Code
                   </button>
                   <button
                     className="cancel-btn"

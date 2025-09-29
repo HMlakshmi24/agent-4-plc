@@ -7,6 +7,7 @@ import InfoSection from '../components/plc_to_st';
 import { LoginModal, RegisterModal } from '../components/LoginModal';
 import Footer from '../components/Footer';
 import TransparentCard from '../components/TransparentCard';
+import Hmi from '../components/Hmi';
 
 const Home = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -60,6 +61,7 @@ const Home = () => {
       <Hero />
       {activeTab && <TransparentCard tab={activeTab} onClose={() => setActiveTab(null)} />}
       <InfoSection />
+      <Hmi />
       <Footer />
       {showLogin && (
         <LoginModal

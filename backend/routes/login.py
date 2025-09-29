@@ -1,24 +1,40 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+# backend/routes/login.py
+from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel, EmailStr
+from backend.db import users_collection
+from backend.utils import hash_password, verify_password, create_access_token, send_welcome_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# Temporary in-memory storage
-users = {}
+class RegisterUser(BaseModel):
+    email: EmailStr
+    password: str
 
-class User(BaseModel):
-    username: str
+class LoginUser(BaseModel):
+    email: EmailStr
     password: str
 
 @router.post("/register")
-def register(user: User):
-    if user.username in users:
+async def register(user: RegisterUser):
+    # check if user exists
+    existing = await users_collection.find_one({"email": user.email})
+    if existing:
         raise HTTPException(status_code=400, detail="User already exists")
-    users[user.username] = user.password
+
+    hashed_pw = hash_password(user.password)
+    new_user = {"email": user.email, "hashed_password": hashed_pw}
+    await users_collection.insert_one(new_user)
+
+    # send welcome email
+    send_welcome_email(user.email, user.email, user.password)
+
     return {"message": "User registered successfully"}
 
 @router.post("/login")
-def login(user: User):
-    if user.username not in users or users[user.username] != user.password:
+async def login(user: LoginUser):
+    db_user = await users_collection.find_one({"email": user.email})
+    if not db_user or not verify_password(user.password, db_user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    return {"message": "Login successful"}
+
+    token = create_access_token({"sub": str(db_user["_id"]), "email": db_user["email"]})
+    return {"access_token": token, "token_type": "bearer"}

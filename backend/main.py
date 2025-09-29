@@ -1,13 +1,14 @@
+# main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routes import home, login, plc_to_st, download
+from backend.routes import home, login, plc_to_st, download, profile
 
 app = FastAPI(title="Agent4PLC Backend")
 
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace with your frontend URL in production
+    allow_origins=["*"],  # Replace with frontend URL in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -18,8 +19,8 @@ app.include_router(home.router)
 app.include_router(login.router)
 app.include_router(plc_to_st.router)
 app.include_router(download.router)
+app.include_router(profile.router)  # new profile routes
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-

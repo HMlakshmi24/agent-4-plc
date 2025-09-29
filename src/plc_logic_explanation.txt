@@ -1,34 +1,22 @@
-Sure, I will guide you through creating Structured Text (ST) code for the Siemens S7-1200 PLC based on your requirements. Here’s how you can structure the code:
+Certainly! Below is the Structured Text (ST) code template for the Siemens S7-1200 PLC based on the given requirements. This code includes variable declarations, logic conditions, and appropriate syntax for achieving the desired control behavior without direct hardware address assignments in the code:
 
-### Variable Declarations
-
-Before implementing the logic, you will need to declare the variables in the TIA Portal environment following your mappings:
-
-```plaintext
+```pascal
 // Variable Declarations
 VAR
-    TankLevel : REAL;
-    OutletValve : BOOL;
-    InletValve : BOOL;
-    Pump : BOOL;
+    TankLevel : REAL;      // Real number variable to hold tank level
+    OutletValve : BOOL;    // Boolean variable to control the outlet valve
+    InletValve : BOOL;     // Boolean variable to control the inlet valve
+    Pump : BOOL;           // Boolean variable to control the pump
 END_VAR
-```
 
-### Logic Implementation
-
-Next, you will write the logic using the Siemens ST syntax with IF / ELSE statements, ensuring each logic block ends with an `END_IF`.
-
-```plaintext
-// Implementing Tank Control Logic
-
-// Logic for Outlet Valve
+// Logic to control OutletValve based on TankLevel
 IF TankLevel > 80.0 THEN
     OutletValve := TRUE;
 ELSE
     OutletValve := FALSE;
 END_IF;
 
-// Logic for Inlet Valve and Pump
+// Logic to control InletValve and Pump based on TankLevel
 IF TankLevel < 20.0 THEN
     InletValve := TRUE;
     Pump := TRUE;
@@ -36,30 +24,35 @@ ELSE
     InletValve := FALSE;
     Pump := FALSE;
 END_IF;
+
+// Ensure all outputs are off when TankLevel is between 20 and 80
+// The previous conditions already handle this, so no additional code required
 ```
 
-### Explanation
+### Explanation:
 
-1. **Tank Level Check for Outlet Valve**: 
-   - When the `TankLevel` is greater than 80.0, the `OutletValve` is opened (`TRUE`).
-   - Otherwise, it remains closed (`FALSE`).
+1. **Variable Declaration**:
+   - Variables `TankLevel`, `OutletValve`, `InletValve`, and `Pump` are declared at the beginning. These will correspond to the PLC tags in the hardware mapping:
+     - `TankLevel` as `%MW10` (Memory Word address).
+     - `OutletValve` as `%Q0.0` (Output address).
+     - `InletValve` as `%Q0.1` (Output address).
+     - `Pump` as `%Q0.2` (Output address).
 
-2. **Tank Level Check for Inlet Valve and Pump**:
-   - When the `TankLevel` is less than 20.0, both the `InletValve` and `Pump` are activated (`TRUE`).
-   - Otherwise, both are deactivated (`FALSE`).
+2. **Outlet Valve Logic**:
+   - If `TankLevel` is greater than 80.0, `OutletValve` is set to TRUE, allowing the outlet valve to open.
+   - Otherwise, `OutletValve` is set to FALSE, closing it.
 
-3. **Middle Range Handling**:
-   - If the tank level is between 20.0 and 80.0, all outputs are set to `FALSE` due to the `ELSE` conditions setting them to `FALSE`.
+3. **Inlet Valve and Pump Logic**:
+   - If `TankLevel` is less than 20.0, both `InletValve` and `Pump` are set to TRUE, opening the inlet valve and turning on the pump.
+   - Otherwise, both `InletValve` and `Pump` are set to FALSE, ensuring they are off.
 
-### Testing and Verification
+4. **Additional Conditions**:
+   - If `TankLevel` is between 20 and 80, the existing conditions ensure that all outputs (valves and pump) are turned off, meeting the requirement.
 
-1. **Simulation at 10% (TankLevel = 10.0)**: 
-   - The `InletValve` and `Pump` should be `TRUE`.
+5. **Testing and Verification**:
+   - In simulation, you can verify:
+     - At `TankLevel = 10%`: `InletValve` and `Pump` should be TRUE.
+     - At `TankLevel = 50%`: All outputs should remain FALSE.
+     - At `TankLevel = 90%`: `OutletValve` should be TRUE.
 
-2. **Simulation at 50% (TankLevel = 50.0)**:
-   - All outputs (`OutletValve`, `InletValve`, and `Pump`) should be `FALSE`.
-
-3. **Simulation at 90% (TankLevel = 90.0)**:
-   - The `OutletValve` should be `TRUE`.
-
-Ensure to map these variables to the corresponding hardware addresses in the PLC tag table for real-world scenarios as per your provided mapping. This code should compile and work as expected in the Siemens TIA Portal environment for simulation and implementation.
+This ST code is structured to ensure correct operation and should be verified in Siemens TIA Portal for successful compilation and simulation.

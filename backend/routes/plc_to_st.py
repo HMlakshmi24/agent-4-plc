@@ -20,7 +20,7 @@ async def generate_st(input_data: TextInput):
         agent = create_agent(
             backend="openai",
             chat_model="gpt-4o",
-            system_msg="You are an expert PLC engineer. Explain Mitsubishi FX/ST ladder logic in plain English.",
+            system_msg="You are an expert PLC engineer",
             system_msg_is_dir=False,
             include_rag=False
         )

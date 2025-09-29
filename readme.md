@@ -75,7 +75,9 @@ to adjust multi-agent system, enhance ability of certain agents and reproduce ex
 
   > npm run dev
 
-
+- ## NOTE:
+  - Please use your own src/config.py - *OpenAI credentials*
+  - Please use your own .env file
 
 
 

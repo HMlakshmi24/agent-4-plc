@@ -29,10 +29,12 @@ const Hero = () => {
           autoPlay={index === currentIndex}
           muted
           playsInline
+          disablePictureInPicture  // <-- disables PiP icon
           onEnded={index === currentIndex ? handleEnded : undefined}
         >
           <source src={src} type="video/mp4" />
         </video>
+
       ))}
     </div>
   );
