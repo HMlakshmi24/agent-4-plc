@@ -43,7 +43,7 @@ chat_model = "gpt-3.5-turbo" #"gpt-4o"  #  or chose according to  which model yo
 embedding_model = "text-embedding-ada-002" 
 
 # OpenAI credentials
-openai_api_key = "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"  
+openai_api_key = ""  
 openai_base_url = "https://api.openai.com/v1"
 
 # DeepSeek
