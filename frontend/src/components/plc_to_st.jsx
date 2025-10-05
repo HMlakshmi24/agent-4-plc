@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import "./plc_to_st.css";
+import { API } from '../config/api'; 
 
 const PlcGenerator = () => {
   const [showModal, setShowModal] = useState(false);
@@ -13,7 +14,7 @@ const PlcGenerator = () => {
 
     setLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/plc/generate", {
+      const response = await fetch(`${API}/plc/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ requirement }),
@@ -33,7 +34,7 @@ const PlcGenerator = () => {
   };
 
   const handleDownload = () => {
-    window.location.href = "http://127.0.0.1:8000/download/";
+    window.location.href = `${API}/download/`;
   };
 
   // Handle Try Now click

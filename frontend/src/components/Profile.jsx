@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import "./profile.css";
+import { API } from '../config/api'; 
 
 const Profile = ({ onLogout }) => {
   const [showModal, setShowModal] = useState(false);
@@ -20,7 +21,7 @@ const Profile = ({ onLogout }) => {
       return;
     }
     try {
-      const res = await fetch("http://127.0.0.1:8000/profile/me", {
+      const res = await fetch(`${API}/profile/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch profile");
@@ -40,7 +41,7 @@ const Profile = ({ onLogout }) => {
     }
     setLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/profile/update", {
+      const res = await fetch(`${API}/profile/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -63,7 +64,7 @@ const Profile = ({ onLogout }) => {
   // Logout
   const handleLogout = async () => {
     try {
-      await fetch("http://127.0.0.1:8000/profile/logout", {
+      await fetch(`${API}/profile/logout`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });

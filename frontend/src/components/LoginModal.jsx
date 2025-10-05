@@ -1,5 +1,6 @@
 // components/LoginModal.jsx
 import React, { useState } from 'react';
+import { API } from '../config/api'; 
 
 const LoginModal = ({ onClose, onLoginSuccess }) => {
   const [email, setEmail] = useState('');
@@ -7,7 +8,7 @@ const LoginModal = ({ onClose, onLoginSuccess }) => {
 
   const handleLogin = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/auth/login", {
+      const res = await fetch(`${API}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email, password: pass }),
@@ -50,7 +51,7 @@ const RegisterModal = ({ onClose, onRegisterSuccess }) => {
 
   const handleRegister = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/auth/register", {
+      const res = await fetch(`${API}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email, password: pass }),
