@@ -1,1 +1,1 @@
-Hello! It seems like you're interested in PLC (Programmable Logic Controller) code. Could you please specify which type of PLC or which programming language you're using (such as Ladder Logic, Structured Text, Function Block Diagram, etc.)? Additionally, if you have a specific application or problem you're trying to solve, feel free to share that information as well!
+Hello! How can I assist you today with PLC-related questions or issues?

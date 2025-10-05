@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from pathlib import Path
 
 # ✅ Import agent + HumanMessage
-from src.langchain_create_agent import create_agent
+from backend.routes.langchain_create_agent import create_agent
 from langchain_core.messages import HumanMessage
 
 router = APIRouter(prefix="/plc", tags=["plc"])
