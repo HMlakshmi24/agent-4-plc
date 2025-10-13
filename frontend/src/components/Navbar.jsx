@@ -32,7 +32,7 @@ const Navbar = ({ onLoginClick, onRegisterClick, onTabClick, isLoggedIn, onLogou
         >
           Home
         </button>
-        <button
+        {/* <button
           onClick={(e) => {
             e.stopPropagation();
             onTabClick("support");
@@ -40,7 +40,7 @@ const Navbar = ({ onLoginClick, onRegisterClick, onTabClick, isLoggedIn, onLogou
           style={navBtn}
         >
           Support
-        </button>
+        </button> */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -50,7 +50,7 @@ const Navbar = ({ onLoginClick, onRegisterClick, onTabClick, isLoggedIn, onLogou
         >
           About Us
         </button>
-        <button
+        {/* <button
           onClick={(e) => {
             e.stopPropagation();
             onTabClick("contact");
@@ -58,7 +58,7 @@ const Navbar = ({ onLoginClick, onRegisterClick, onTabClick, isLoggedIn, onLogou
           style={navBtn}
         >
           Contact Us
-        </button>
+        </button> */}
         {isLoggedIn ? (
           <Profile token={token} onLogout={onLogout} />
         ) : (

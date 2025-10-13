@@ -9,16 +9,16 @@ const Footer = () => {
         justifyContent: 'center',
         alignItems: 'center',
         flexWrap: 'wrap',
-        gap: '4rem',
+        gap: '12rem',
         marginBottom: '6rem',
       }}>
-        <div style={{ textAlign: 'center' }}>
+        {/* <div style={{ textAlign: 'center' }}>
           <div style={{ fontWeight: 'bold' }}>Call us</div>
           <div>+1-234-567-890</div>
-        </div>
+        </div> */}
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontWeight: 'bold' }}>Write to us</div>
-          <div>sales@parijat.com</div>
+          <div>hm.lakshmi@parijat.com</div>
         </div>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontWeight: 'bold' }}>Address</div>
@@ -32,7 +32,7 @@ const Footer = () => {
         justifyContent: 'center',
         alignItems: 'flex-start',
         flexWrap: 'wrap',
-        gap: '10rem',
+        gap: '12rem',
         marginBottom: '2rem',
       }}>
         {/* About Us */}
@@ -44,27 +44,41 @@ const Footer = () => {
         </div>
 
         {/* Quick Links */}
-        <div>
+        {/* <div>
           <h4>Quick Links</h4>
           <p>Products</p>
           <p>Services</p>
           <p>Solutions</p>
           
-        </div>
+        </div> */}
 
         {/* Important Links */}
-        <div>
+        {/* <div>
           <h4>Important Links</h4>
           <p>About Us</p>
           <p>Contact Us</p>
         
           <p>Disclaimer</p>
-        </div>
+        </div> */}
 
 
         
         {/* Follow Us */}
         <div>
+          <h4>For More Visit..</h4>
+          <p>
+            <a
+              href="https://parijat.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#002b5b', textDecoration: 'none' }}
+            >
+              www.parijat.com
+            </a>
+          </p>
+
+        </div>
+        {/* <div>
           <h4>Follow Us</h4>
           <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
             <div style={{
@@ -94,12 +108,23 @@ const Footer = () => {
               ▶
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Bottom Bar */}
       <div style={{ backgroundColor: 'black', color: 'white', padding: '1rem', textAlign: 'center' }}>
-        <p style={{ margin: 0 }}>© Copyright Parijat, All Rights Reserved Parijat.</p>
+        <p style={{ margin: 0 }}>
+          © Copyright{' '}
+          <a
+            href="https://parijat.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: '#4db8ff', textDecoration: 'none', fontWeight: 'bold' }}
+          >
+            Parijat
+          </a>
+          , All Rights Reserved.
+        </p>
       </div>
     </div>
   );

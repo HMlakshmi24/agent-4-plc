@@ -1,4 +1,3 @@
-// components/LoginModal.jsx
 import React, { useState } from 'react';
 import { API } from '../config/api'; 
 
@@ -21,7 +20,11 @@ const LoginModal = ({ onClose, onLoginSuccess }) => {
         onLoginSuccess();
       } else {
         const err = await res.json();
-        alert(err.detail || "Login failed ❌");
+        // Fix: Proper error message instead of [object Object]
+        const errorMsg = typeof err.detail === "string"
+          ? err.detail
+          : "Wrong username or password ❌";
+        alert(errorMsg);
       }
     } catch (error) {
       alert("Error connecting to server");
