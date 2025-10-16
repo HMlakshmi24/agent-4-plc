@@ -55,7 +55,7 @@ const Hero = () => {
         src={hero}
         alt="Hero"
         className="hero-image"
-        style={{ width: "100%", height: "100vh", objectFit: "cover" }}
+        style={{ width: "100%", height: "75vh", objectFit: "cover" }}
       />
     </div>
   );

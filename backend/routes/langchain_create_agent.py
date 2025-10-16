@@ -2,8 +2,12 @@
 ## used for our langGraph-based agent system.
 
 import sys
-from pathlib import Path
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env variables
+load_dotenv()
 
 # Ensure project root is in sys.path
 parent_dir = Path(__file__).resolve().parent.parent
@@ -11,12 +15,22 @@ sys.path.append(str(parent_dir))
 
 # Imports
 from langchain_chroma import Chroma
-from backend.routes.config import *
-from backend.routes.config import deepseek_api_key, deepseek_base_url
+from backend.routes.config import chat_model, embedding_model, deepseek_api_key, deepseek_base_url
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
+
+# -----------------------------
+# Load API keys and URLs from env
+# -----------------------------
+openai_api_key = os.getenv("OPENAI_API_KEY")
+openai_base_url = os.getenv("OPENAI_BASE_URL")
+
+if not openai_api_key:
+    raise ValueError("❌ OPENAI_API_KEY not found in environment variables")
+if not openai_base_url:
+    raise ValueError("❌ OPENAI_BASE_URL not found in environment variables")
 
 # -----------------------------
 # Build the chain with or without RAG
@@ -36,9 +50,9 @@ def chain_for_model(model: ChatOpenAI,
                 embedding_function=embedding,
                 persist_directory=db_dir
             )
-            print(f" Loaded vectorstore from: {db_dir}")
+            print(f"✅ Loaded vectorstore from: {db_dir}")
         else:
-            raise FileNotFoundError(f" Vectorstore DB not found at: {db_dir}")
+            raise FileNotFoundError(f"⚠️ Vectorstore DB not found at: {db_dir}")
         
         retriever = vectorstore.as_retriever()
 
@@ -67,13 +81,10 @@ def create_agent(tools=[],
                  system_msg_is_dir: bool = True,
                  include_rag: bool = False,
                  include_tools: bool = False,
-                 backend: str = "openai"  # NEW PARAM
-                 ) -> ChatOpenAI:
+                 backend: str = "openai"  # 'openai' or 'deepseek'
+                 ):
     """
     Creates a ChatOpenAI agent compatible with LangGraph and optionally supports RAG.
-
-    Parameters:
-        - backend: 'openai' or 'deepseek'
     """
 
     # Select appropriate LLM
@@ -91,11 +102,11 @@ def create_agent(tools=[],
                 base_url=deepseek_base_url
             )
         else:
-            raise ValueError(f" Unsupported backend: {backend}")
+            raise ValueError(f"❌ Unsupported backend: {backend}")
     else:
         base_agent_model = llm
 
-    #  Select embedding model
+    # Select embedding model
     if embedding is None and include_rag:
         if backend == "openai":
             embedding = OpenAIEmbeddings(
@@ -104,7 +115,7 @@ def create_agent(tools=[],
                 base_url=openai_base_url
             )
         elif backend == "deepseek":
-            print(" DeepSeek does not support embeddings. Falling back to OpenAI.")
+            print("⚠️ DeepSeek does not support embeddings. Falling back to OpenAI.")
             embedding = OpenAIEmbeddings(
                 model=embedding_model,
                 api_key=openai_api_key,
@@ -122,14 +133,14 @@ def create_agent(tools=[],
     if tools is None:
         tools = []
 
-    #  Load system message
+    # Load system message
     if system_msg_is_dir:
         with open(system_msg, 'r') as file:
             system_message = file.read()
     else:
         system_message = system_msg
 
-    #  Set prompt
+    # Set prompt
     if not include_rag:
         prompt = ChatPromptTemplate.from_messages([
             (
@@ -150,7 +161,7 @@ def create_agent(tools=[],
 
     prompt = prompt.partial(system_message=system_message)
 
-    #  Tool support
+    # Tool support
     if include_tools and len(tools) > 0:
         tool_names = ", ".join([tool.name for tool in tools])
         prompt = prompt.partial(tool_names=tool_names)
@@ -159,7 +170,7 @@ def create_agent(tools=[],
         prompt = prompt.partial(tool_names="")
         model = base_agent_model
 
-    #  Return full chain
+    # Return full chain
     return chain_for_model(
         model=model,
         prompt=prompt,
@@ -167,5 +178,3 @@ def create_agent(tools=[],
         embedding=embedding,
         db_dir=database_dir
     )
-
-

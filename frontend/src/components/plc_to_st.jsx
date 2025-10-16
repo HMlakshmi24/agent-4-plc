@@ -50,7 +50,7 @@ const PlcGenerator = () => {
   return (
     <div className="plc-section">
       <div className="plc-text">
-        <h2>Smarter PLC Code Generation</h2>
+        <h2>AI Smarter PLC Code Generation</h2>
         <p>
           Automate your PLC Structured Text coding with AI-driven precision.
           Enter your requirement, and let our agent instantly craft optimized,
