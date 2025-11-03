@@ -1,5 +1,5 @@
 .hmi-section {
-  background: #0d0d1a;
+  background: #0b0b18;
   color: #f0f0f0;
   display: flex;
   justify-content: space-between;
@@ -14,9 +14,9 @@
 }
 
 .hmi-text h2 {
-  font-size: 2.2rem;
+  font-size: 2.3rem;
   margin-bottom: 1.5rem;
-  background: linear-gradient(135deg, #6a5acd, #00bfff);
+  background: linear-gradient(135deg, #7b68ee, #00bfff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -24,7 +24,7 @@
 .hmi-text p {
   font-size: 1.25rem;
   line-height: 1.6;
-  color: #ccc;
+  color: #cfcfcf;
 }
 
 .hmi-action {
@@ -42,7 +42,7 @@
   border: none;
   border-radius: 14px;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(0, 191, 255, 0.7);
+  box-shadow: 0 6px 16px rgba(0, 191, 255, 0.6);
   transition: all 0.3s ease;
 }
 
@@ -67,16 +67,16 @@
 }
 
 .hmi-modal {
-  background: #1a1a2e;
+  background: #16162a;
   color: #eee;
   padding: 3rem 2.5rem;
   border-radius: 20px;
   width: 95%;
-  max-width: 650px;
-  min-height: 350px;
+  max-width: 700px;
+  min-height: 420px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   text-align: center;
   box-shadow: 0 10px 28px rgba(0, 191, 255, 0.6);
   border: 1px solid rgba(106, 90, 205, 0.4);
@@ -88,25 +88,69 @@
   color: #7b68ee;
 }
 
-.hmi-coming-soon {
-  font-size: 1.3rem;
-  font-weight: bold;
-  color: #00bfff;
-  margin-top: 2rem;
-  text-shadow: 0 0 8px rgba(0, 191, 255, 0.7);
+.hmi-modal textarea {
+  width: 100%;
+  height: 180px;
+  border-radius: 10px;
+  border: none;
+  padding: 1.2rem;
+  margin-bottom: 2rem;
+  background: #202040;
+  color: #fff;
+  resize: none;
+  font-size: 1.05rem;
+  line-height: 1.5;
 }
 
-.hmi-close-btn {
-  margin-top: 4rem;
-  padding: 1rem 1.5rem;
+.hmi-modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.2rem;
+  margin-top: 1rem;
+}
+
+.cancel-btn,
+.generate-btn,
+.download-btn {
+  flex: 1;
+  padding: 1rem 1.4rem;
   border: none;
   border-radius: 10px;
-  background: #444;
-  color: #fff;
-  font-size: 1rem;
   cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
 }
 
-.hmi-close-btn:hover {
+.cancel-btn {
+  background: #444;
+  color: #fff;
+}
+
+.cancel-btn:hover {
   background: #666;
+}
+
+.generate-btn {
+  background: #0077ff;
+  color: #fff;
+}
+
+.generate-btn:hover {
+  background: #3399ff;
+}
+
+.download-btn {
+  background: #00c853;
+  color: #fff;
+  margin-top: 1rem;
+}
+
+.download-btn:hover {
+  background: #00e676;
+}
+
+.hmi-success p {
+  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+  color: #a5d6a7;
 }

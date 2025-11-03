@@ -34,7 +34,7 @@ const PlcGenerator = () => {
   };
 
   const handleDownload = () => {
-    window.location.href = `${API}/download/`;
+    window.location.href = `${API}/download/plc`;
   };
 
   // Handle Try Now click
