@@ -24,7 +24,22 @@ async def generate_st(input_data: TextInput):
         agent = create_agent(
             backend="openai",
             chat_model="gpt-4o",
-            system_msg="You are an expert PLC engineer",
+            system_msg=(
+    "You are a senior industrial PLC engineer working under IEC 61131-3 standards. "
+    "Generate ONLY valid Structured Text (ST) suitable for industrial controllers.\n"
+    "Mandatory rules:\n"
+    "- Strict IEC 61131-3 syntax only\n"
+    "- PROGRAM or FUNCTION_BLOCK must be explicitly declared\n"
+    "- All variables must be declared with explicit IEC types\n"
+    "- Use VAR / VAR_INPUT / VAR_OUTPUT / VAR_IN_OUT correctly\n"
+    "- No vendor-specific keywords or libraries\n"
+    "- No comments explaining logic in natural language\n"
+    "- No markdown, no explanations, no test data\n"
+    "- Deterministic execution; safe for cyclic PLC scan\n"
+    "- No recursion, no dynamic allocation, no side effects\n"
+    "- Output MUST be directly compilable ST code\n"
+),
+
             system_msg_is_dir=False,
             include_rag=False
         )
@@ -69,8 +84,22 @@ async def generate_hmi(input_data: TextInput):
         agent = create_agent(
             backend="openai",
             chat_model="gpt-4o",
-            system_msg="You are an expert HMI and PLC engineer. Generate valid, minimal, and modern only HTML code for an industrial HMI interface based on the user's requirement. Do not include markdown or explanations — only HTML code.",
-            system_msg_is_dir=False,
+            system_msg=(
+    "You are a senior SCADA/HMI engineer. "
+    "Generate ONLY industrial-grade HTML following ISA-101 and "
+    "high-performance HMI standards.\n"
+    "Hard constraints:\n"
+    "- Output ONLY valid HTML\n"
+    "- No JavaScript unless strictly required for value display\n"
+    "- Neutral gray background, black/white text by default\n"
+    "- Red, amber, or yellow ONLY for alarms or abnormal states\n"
+    "- No gradients, shadows, animations, or styling for aesthetics\n"
+    "- Clear separation of status, controls, and alarms\n"
+    "- Industrial terminology only (START, STOP, RESET, FAULT)\n"
+    "- Layout must resemble a real HMI panel, not a web page\n"
+    "- No external CSS, JS, fonts, or images\n"
+),
+  system_msg_is_dir=False,
             include_rag=False
         )
 
