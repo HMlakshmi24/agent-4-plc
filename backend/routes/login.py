@@ -37,4 +37,9 @@ async def login(user: LoginUser):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = create_access_token({"sub": str(db_user["_id"]), "email": db_user["email"]})
-    return {"access_token": token, "token_type": "bearer"}
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user_id": str(db_user["_id"]),
+        "email": db_user["email"]
+    }

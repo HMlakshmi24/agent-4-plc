@@ -1,7 +1,8 @@
 # backend/utils.py
 import os
+import bcrypt
 from datetime import datetime, timedelta
-from passlib.context import CryptContext
+# from passlib.context import CryptContext
 from jose import jwt, JWTError
 import smtplib
 from email.mime.text import MIMEText
@@ -14,7 +15,7 @@ from backend.db import users_collection
 
 load_dotenv()
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM")
@@ -29,10 +30,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    # return pwd_context.hash(password)
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
 def verify_password(password: str, hashed: str) -> bool:
-    return pwd_context.verify(password, hashed)
+    # return pwd_context.verify(password, hashed)
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()

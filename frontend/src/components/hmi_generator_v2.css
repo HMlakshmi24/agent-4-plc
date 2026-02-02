@@ -1,0 +1,486 @@
+/* hmi_generator_v2.css - Improved HMI Generation UI */
+
+.hmi-section-v2 {
+  width: 100%;
+  padding: 60px 40px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  margin: 40px 0;
+  border-radius: 12px;
+}
+
+.hmi-header {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.hmi-text h2 {
+  font-size: 2.5rem;
+  color: #1a1a2e;
+  margin-bottom: 15px;
+  font-weight: 700;
+}
+
+.hmi-text p {
+  font-size: 1.1rem;
+  color: #555;
+  max-width: 600px;
+  margin: 0 auto 30px;
+  line-height: 1.6;
+}
+
+.hmi-action {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.hmi-generate-btn {
+  padding: 12px 40px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
+  transition: all 0.3s ease;
+}
+
+.hmi-generate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.6);
+}
+
+/* Results Container */
+.hmi-results-container {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+@media (max-width: 1024px) {
+  .hmi-results-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* History Panel */
+.hmi-history-panel {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.hmi-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 10px;
+}
+
+.hmi-history-header h3 {
+  color: #1a1a2e;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.hmi-clear-btn {
+  padding: 6px 12px;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.hmi-clear-btn:hover {
+  background: #ee5a52;
+}
+
+.hmi-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hmi-history-item {
+  background: #f8f9fa;
+  border-left: 4px solid #16a34a;
+  padding: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.hmi-history-item:hover {
+  background: #eef9f5;
+  transform: translateX(4px);
+}
+
+.hmi-history-meta {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.hmi-time-badge {
+  display: inline-block;
+  background: #e0e0e0;
+  color: #666;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 0.75rem;
+}
+
+.hmi-history-requirement {
+  color: #333;
+  font-size: 0.9rem;
+  margin: 5px 0;
+  font-weight: 500;
+}
+
+.hmi-preview-mini {
+  background: #f0f0f0;
+  padding: 8px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  overflow-x: auto;
+  margin: 8px 0 0 0;
+  color: #333;
+}
+
+.hmi-preview-mini pre {
+  margin: 0;
+  font-family: 'Courier New', monospace;
+}
+
+/* Preview Panel */
+.hmi-preview-panel {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.hmi-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 10px;
+}
+
+.hmi-preview-header h3 {
+  color: #1a1a2e;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.hmi-validated-badge {
+  background: #51cf66;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Live Preview */
+.hmi-live-preview {
+  margin-bottom: 15px;
+}
+
+.hmi-live-preview h4 {
+  margin: 0 0 10px 0;
+  color: #1a1a2e;
+  font-size: 0.95rem;
+}
+
+.hmi-frame {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* Code display */
+.hmi-code-preview {
+  margin-bottom: 15px;
+}
+
+.hmi-code-preview h4 {
+  margin: 0 0 10px 0;
+  color: #1a1a2e;
+  font-size: 0.95rem;
+}
+
+.hmi-code-preview pre {
+  background: #1e1e2e;
+  color: #d4d4d4;
+  padding: 15px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  font-family: 'Courier New', monospace;
+  margin: 0;
+  max-height: 200px;
+  border: 1px solid #3e3e4e;
+}
+
+.hmi-code-preview code {
+  color: #d4d4d4;
+}
+
+/* Action buttons */
+.hmi-preview-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.hmi-download-btn,
+.hmi-open-btn,
+.hmi-regenerate-btn {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.hmi-download-btn {
+  background: #51cf66;
+  color: white;
+}
+
+.hmi-download-btn:hover {
+  background: #40c057;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(81, 207, 102, 0.3);
+}
+
+.hmi-open-btn {
+  background: #4dabf7;
+  color: white;
+}
+
+.hmi-open-btn:hover {
+  background: #1c7ed6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(77, 171, 247, 0.3);
+}
+
+.hmi-regenerate-btn {
+  background: #a78bfa;
+  color: white;
+}
+
+.hmi-regenerate-btn:hover {
+  background: #8b5cf6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+/* Modal */
+.hmi-modal-overlay-v2 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.hmi-modal-v2 {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.hmi-modal-v2 h3 {
+  color: #1a1a2e;
+  margin: 0 0 20px 0;
+  font-size: 1.5rem;
+}
+
+/* HMI Input */
+.hmi-input-group {
+  margin-bottom: 20px;
+}
+
+.hmi-input-group label {
+  display: block;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.hmi-input-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+}
+
+.hmi-input-group textarea:focus {
+  outline: none;
+  border-color: #16a34a;
+}
+
+.hmi-char-count {
+  font-size: 0.8rem;
+  color: #999;
+  margin-top: 4px;
+  text-align: right;
+}
+
+/* Modal buttons */
+.hmi-modal-buttons {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.hmi-cancel-btn {
+  flex: 1;
+  padding: 12px;
+  background: #f0f0f0;
+  color: #333;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.hmi-cancel-btn:hover {
+  background: #e0e0e0;
+}
+
+.hmi-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.hmi-generate-modal-btn {
+  flex: 1;
+  padding: 12px;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.hmi-generate-modal-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4);
+}
+
+.hmi-generate-modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.hmi-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: hmi-spin 0.6s linear infinite;
+}
+
+@keyframes hmi-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Guidelines */
+.hmi-guidelines {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.hmi-guidelines p {
+  margin: 0 0 8px 0;
+  font-weight: 600;
+  color: #333;
+}
+
+.hmi-guidelines ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.hmi-guidelines li {
+  margin: 4px 0;
+}
+
+/* Scrollbars */
+.hmi-preview-panel::-webkit-scrollbar,
+.hmi-history-panel::-webkit-scrollbar,
+.hmi-modal-v2::-webkit-scrollbar {
+  width: 8px;
+}
+
+.hmi-preview-panel::-webkit-scrollbar-track,
+.hmi-history-panel::-webkit-scrollbar-track,
+.hmi-modal-v2::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.hmi-preview-panel::-webkit-scrollbar-thumb,
+.hmi-history-panel::-webkit-scrollbar-thumb,
+.hmi-modal-v2::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.hmi-preview-panel::-webkit-scrollbar-thumb:hover,
+.hmi-history-panel::-webkit-scrollbar-thumb:hover,
+.hmi-modal-v2::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

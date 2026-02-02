@@ -1,19 +1,17 @@
 # backend/db.py
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
+from backend.local_db import AsyncJsonDatabase
 from dotenv import load_dotenv
 
 # load .env from same folder
-load_dotenv(dotenv_path=".env")
+env_path = os.path.join(os.path.dirname(__file__), ".env")
+load_dotenv(dotenv_path=env_path)
 
-MONGO_URI = os.getenv("MONGO_URI")
-MONGO_DB = os.getenv("MONGO_DB")
+MONGO_DB = os.getenv("MONGO_DB", "agent4plc")
 
-if not MONGO_URI or not MONGO_DB:
-    raise RuntimeError("❌ MongoDB config missing. Check your .env file!")
-
-client = AsyncIOMotorClient(MONGO_URI)
-db = client[MONGO_DB]
+# Switch to Local JSON Database
+print(f"[OK] Using Local File Database: {MONGO_DB}")
+db = AsyncJsonDatabase(MONGO_DB)
 
 # collections
 users_collection = db["users"]

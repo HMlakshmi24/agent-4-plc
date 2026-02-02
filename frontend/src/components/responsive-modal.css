@@ -1,0 +1,158 @@
+/* Responsive Media Queries for Professional UI */
+
+/* Tablet (768px and below) */
+@media (max-width: 768px) {
+  .plc-modal-v2 {
+    max-width: 90vw;
+    max-height: 92vh;
+  }
+
+  .modal-header {
+    padding: 20px;
+  }
+
+  .modal-header h3 {
+    font-size: 1.3rem;
+  }
+
+  .modal-content {
+    padding: 20px;
+  }
+
+  .language-options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .brand-options-compact {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .requirement-textarea {
+    min-height: 100px;
+  }
+
+  .modal-actions {
+    padding: 16px 20px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Mobile (480px and below) */
+@media (max-width: 480px) {
+  .plc-modal-v2 {
+    max-width: 95vw;
+    max-height: 95vh;
+    border-radius: 8px;
+  }
+
+  .modal-header {
+    padding: 16px;
+  }
+
+  .modal-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .close-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 1.2rem;
+  }
+
+  .modal-content {
+    padding: 16px;
+  }
+
+  .selection-section {
+    margin-bottom: 16px;
+  }
+
+  .section-label {
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+  }
+
+  .language-options {
+    grid-template-columns: 1fr;
+  }
+
+  .lang-button {
+    padding: 10px;
+    font-size: 0.85rem;
+  }
+
+  .brand-options-compact {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .brand-button {
+    padding: 10px 6px;
+    font-size: 0.75rem;
+  }
+
+  .brand-logo {
+    font-size: 1.3rem;
+  }
+
+  .requirement-textarea {
+    min-height: 90px;
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+
+  .input-section {
+    margin-bottom: 16px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    padding: 16px;
+    gap: 10px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+}
+
+/* Extra small phones (360px and below) */
+@media (max-width: 360px) {
+  .modal-header h3 {
+    font-size: 1rem;
+  }
+
+  .section-label {
+    font-size: 0.75rem;
+  }
+
+  .language-options {
+    gap: 6px;
+  }
+
+  .lang-button {
+    padding: 8px;
+    font-size: 0.8rem;
+  }
+
+  .brand-button {
+    padding: 8px 4px;
+    font-size: 0.7rem;
+  }
+
+  .brand-logo {
+    font-size: 1.1rem;
+  }
+
+  .requirement-textarea {
+    font-size: 0.85rem;
+  }
+}

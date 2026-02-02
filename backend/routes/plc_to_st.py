@@ -5,6 +5,13 @@ from pathlib import Path
 # ✅ Import agent + HumanMessage
 from backend.routes.langchain_create_agent import create_agent
 from langchain_core.messages import HumanMessage
+import os
+from dotenv import load_dotenv
+
+# Load env to get PLC_OUTPUT_DIR
+env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+load_dotenv(dotenv_path=env_path)
+PLC_OUTPUT_DIR = os.getenv("PLC_OUTPUT_DIR", "backend/plc")
 
 router = APIRouter(prefix="/plc", tags=["plc"])
 
@@ -53,7 +60,9 @@ async def generate_st(input_data: TextInput):
         st_code = response.content
 
         # Save as .st file (Unicode-safe)
-        output_path = Path("generated_code.st")
+        output_dir = Path(PLC_OUTPUT_DIR)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / "generated_code.st"
         try:
             with open(output_path, "w", encoding="utf-8") as f:
                 f.write(st_code)
@@ -112,7 +121,9 @@ async def generate_hmi(input_data: TextInput):
         hmi_code = response.content
 
         # Save as .html file (UTF-8)
-        output_path = Path("generated_hmi.html")
+        output_dir = Path(PLC_OUTPUT_DIR)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / "generated_hmi.html"
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(hmi_code.strip())
 

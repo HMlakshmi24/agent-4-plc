@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react';
 
 import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
-import InfoSection from '../components/plc_to_st';
+import PlcGeneratorV2 from '../components/PlcGeneratorV2';
+import HmiGeneratorV2 from '../components/HmiGeneratorV2';
 import { LoginModal, RegisterModal } from '../components/LoginModal';
 import Footer from '../components/Footer';
 import TransparentCard from '../components/TransparentCard';
-import Hmi from '../components/Hmi';
 
 const Home = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -60,8 +60,11 @@ const Home = () => {
       />
       <Hero />
       {activeTab && <TransparentCard tab={activeTab} onClose={() => setActiveTab(null)} />}
-      <InfoSection />
-      <Hmi />
+      
+      {/* Separated PLC and HMI Generators */}
+      <PlcGeneratorV2 />
+      <HmiGeneratorV2 />
+      
       <Footer />
       {showLogin && (
         <LoginModal
@@ -97,3 +100,4 @@ const Home = () => {
 };
 
 export default Home;
+

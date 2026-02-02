@@ -1,83 +1,90 @@
-# Agents4PLC
-A Multi-Agent System for Programmable Logic Controller (PLC) Code Generation based on IEC-61131 standard. The paper see:
-[Agents4PLC: Automating Closed-loop PLC Code Generation and Verification in Industrial Control Systems using LLM-based Agents](https://arxiv.org/abs/2410.14209).
+# Agent4PLC
 
-![Overview of our workflow.](pics/workflow.png)
+A powerful, AI-driven assistant for PLC code generation and HMI design, featuring a premium modern UI and strict IEC 61131-3 compliance.
 
-## Dataset
+## Project Overview
 
-The dataset is composed of benchmark dataset and RAG dataset, where released benchmarks are collected 
-from open-source Github programs and we manually convert instruction into formalized and plcverif 
-compatiable properties.
+Agent4PLC is a full-stack application that leverages LLMs to generate industrial control code (Structured Text, Ladder Logic, etc.) and HMI interfaces.
 
-RAG dataset includes ST examples and tags are collected from [OSCAT dataset](http://www.oscat.de).
+### Key Features
+-   **AI Code Generation**: Transforms plain text requirements into valid PLC code.
+-   **Multi-Language Support**: ST, LD, FBD, SFC, IL.
+-   **HMI Generation**: Creates ISA-101 compliant HTML interfaces.
+-   **Premium UI**: "Black Design" default with Light/Dark theme toggling.
+-   **Centralized Output**: All generated files are stored in `backend/plc`.
 
-Industrial control documents and unreleased part of benchmark are collected from our partner companies
-which are not prepared to be released.
+## Folder Structure
 
+The project is organized to ensure clarity and maintainability.
 
-## Source Code Organization
+```
+agent-4-plc/
+├── backend/                # FastAPI Backend
+│   ├── plc/                # [NEW] Output directory for ALL generated files
+│   ├── routes/             # API Endpoints
+│   ├── main.py             # Entry point
+│   └── .env                # Configuration
+├── frontend/               # Vite + React Frontend
+│   ├── public/
+│   │   └── plc/            # Publicly accessible PLC assets
+│   ├── src/
+│   │   ├── components/     # UI Components
+│   │   ├── context/        # React Context (Theme, Auth)
+│   │   └── pages/          # Full pages
+│   └── tailwind.config.js  # Styling config
+└── README.md               # This file
+```
 
-benchmark/ show the constructed tasks for plc code generation & verification task with patterns compatiable for plcverif verification.
+## Setup & Running
 
-result/ demonstrate the experiment statistics and detailed responses.
+### Prerequisites
+-   Python 3.10+
+-   Node.js 18+
+-   MongoDB (local or remote)
 
-prompts/ contain specified prompts for each agent, including agent prompt engineering ways mentioned in our paper to 
-enhance ability of agents.
+### Backend
+1.  Navigate to `backend/`:
+    ```bash
+    cd backend
+    ```
+2.  Install dependencies (if not already):
+    ```bash
+    pip install -r requirements.txt
+    ```
+3.  Configure `.env`:
+    Ensure `PLC_OUTPUT_DIR=backend/plc` is set.
+4.  Run the server:
+    ```bash
+    python main.py
+    ```
+    *Server runs on `http://localhost:8001`*
 
-LangChain/, MetaGPT/, LLM4PLC_reproduce/ or other folders corresponding to a certain multi agent framework's contain the implementation of the framework. You are free to create one for your own task, as long as the output satisfy the verification standards. (not available)
+### Frontend
+1.  Navigate to `frontend/`:
+    ```bash
+    cd frontend
+    ```
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+3.  Start the development server:
+    ```bash
+    npm run dev
+    ```
+    *App runs on `http://localhost:5173`*
 
-Notice: you should adjust content in config otherwise our framework could not work!
+## Configuration
 
-## Documents
+**Output Directory**:
+The backend saves all generated files to the path specified in `backend/.env`.
+```env
+PLC_OUTPUT_DIR=backend/plc
+```
+Changing this path allows you to redirect outputs to a network drive or another folder.
 
-For tools related to st compilation and smv verification not provided in src, see src/README.md.
-For benchmark's construction process and how to use it, see benchmark/readme.md.
-
-## Recommended Agent Related Tools & Works
-
-Despite that our detailed code cannot be released due to cooperation with company, the following propose some recommended types 
-to adjust multi-agent system, enhance ability of certain agents and reproduce experiments in out paper:  
-
-| Agent       | Link |
-| :--- | ----------- |
-| MetaGPT     | https://github.com/geekan/MetaGPT                |
-| LangGraph   | https://github.com/langchain-ai/langgraph        |
-| ChatDev     | https://github.com/OpenBMB/ChatDev               |
-| MapCoder    | [MapCoder: Multi-Agent Code Generation for Competitive Problem Solving](https://arxiv.org/abs/2405.11403) |
-
-
-# 📦 Installation & Setup
-
-- ### Clone the Repository
-  > git clone
-
-  > cd agent-4-plc
-
-- ### Create virtual environment
-  > Install python 3.10.0 from website.
-
-  > py -3.10 -m venv venv
-
-- ### To Activate virtual environment for (Windows)
-  > venv\Scripts\activate
-
-- ### Install all the dependencies in virtual environment
-  > pip install -r requirements.txt
-
-- ### Run Backend
-  > uvicorn backend.main:app --reload
-
-- ### Run Frontend
-  > cd Frontend
-
-  > npm install
-
-  > npm run dev
-
-- ## NOTE:
-  - Please use your own src/config.py - *OpenAI credentials*
-  - Please use your own .env file
-
-
+## Theming
+The application defaults to a **Premium Black** design. Users can toggle between **Light** and **Dark** modes using the sun/moon icon in the navigation bar. 
+-   **Dark Mode**: Optimized for low-light control room environments (Default).
+-   **Light Mode**: High contrast for bright environments.
 

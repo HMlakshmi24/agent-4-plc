@@ -7,14 +7,15 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load .env variables
-load_dotenv()
+env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+load_dotenv(dotenv_path=env_path)
 
 # Ensure project root is in sys.path
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
 # Imports
-from langchain_chroma import Chroma
+# from langchain_chroma import Chroma
 from backend.routes.config import chat_model, embedding_model, deepseek_api_key, deepseek_base_url
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -24,13 +25,11 @@ from langchain_core.runnables import RunnablePassthrough
 # -----------------------------
 # Load API keys and URLs from env
 # -----------------------------
+# -----------------------------
+# Load API keys and URLs from env
+# -----------------------------
 openai_api_key = os.getenv("OPENAI_API_KEY")
 openai_base_url = os.getenv("OPENAI_BASE_URL")
-
-if not openai_api_key:
-    raise ValueError("❌ OPENAI_API_KEY not found in environment variables")
-if not openai_base_url:
-    raise ValueError("❌ OPENAI_BASE_URL not found in environment variables")
 
 # -----------------------------
 # Build the chain with or without RAG
@@ -46,6 +45,7 @@ def chain_for_model(model: ChatOpenAI,
 
     if include_rag:
         if os.path.exists(db_dir):
+            from langchain_chroma import Chroma
             vectorstore = Chroma(
                 embedding_function=embedding,
                 persist_directory=db_dir

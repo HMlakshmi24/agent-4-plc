@@ -1,11 +1,17 @@
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
 import os
+from dotenv import load_dotenv
+
+# Load env to get PLC_OUTPUT_DIR
+env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+load_dotenv(dotenv_path=env_path)
+PLC_OUTPUT_DIR = os.getenv("PLC_OUTPUT_DIR", "backend/plc")
 
 router = APIRouter(prefix="/download", tags=["download"])
 
-PLC_OUTPUT_FILE = "generated_code.st"
-HMI_OUTPUT_FILE = "generated_hmi.html"
+PLC_OUTPUT_FILE = os.path.join(PLC_OUTPUT_DIR, "generated_code.st")
+HMI_OUTPUT_FILE = os.path.join(PLC_OUTPUT_DIR, "generated_hmi.html")
 
 @router.get("/plc")
 async def download_plc_file():

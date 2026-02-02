@@ -1,0 +1,22 @@
+[
+  {
+    "email": "testuser2945@example.com",
+    "hashed_password": "$2b$12$HK4w5D1R3xPTYHyLOuOh7.8GnmrJ3hraBr4QmTw8qKEOy/aWiWanS",
+    "_id": "697e69372e01dd3139222056"
+  },
+  {
+    "email": "testuser2997@example.com",
+    "hashed_password": "$2b$12$vaDJAKkQDU4eeeaOIzSPIuMAI7VeZIM0hV.UeDw5hN9GlmiHaeTgm",
+    "_id": "697e6c14ba21cf695e9cc45b"
+  },
+  {
+    "email": "hm.lakshmi@parijat.com",
+    "hashed_password": "$2b$12$zrrpJYgrUlbmeSAptyYYvuuZTfTK/aTRfj5xxeU12LUtXkk7Z87Ge",
+    "_id": "697e6c47c2a3244a4483ea75"
+  },
+  {
+    "email": "testuser4292@example.com",
+    "hashed_password": "$2b$12$zCiGA.ZMbrW4p.kZ8DQ2yOe9W3oIQ82KyTVxTAmP0yjNrFSZuCllK",
+    "_id": "697ecc315bcdaa6fa1db3447"
+  }
+]
