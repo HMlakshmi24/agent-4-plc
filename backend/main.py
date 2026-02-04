@@ -19,22 +19,14 @@ app = FastAPI(title="Agent4PLC Backend")
 # =========================================================================
 # CORS CONFIGURATION - LOCALHOST ONLY (SECURITY)
 # =========================================================================
-# Development: Allow localhost only
 # Production: Specify exact frontend URL
-ALLOWED_ORIGINS = [
-    "http://localhost:5173",      # Vite frontend default
-    "http://127.0.0.1:5173",
-    "http://localhost:5174",      # Vite frontend alt port
-    "http://127.0.0.1:5174",
-    "http://localhost:3000",      # Alternative port
-    "http://127.0.0.1:3000",
-]
+
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=["*"]
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
