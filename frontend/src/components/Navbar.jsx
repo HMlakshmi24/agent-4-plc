@@ -7,42 +7,48 @@ const Navbar = ({ onLoginClick, onRegisterClick, onTabClick, isLoggedIn, onLogou
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4 bg-black/50 backdrop-blur-md border-b border-white/10 text-white transition-colors duration-300 dark:bg-premium-black/80 dark:border-premium-border/50">
-      <div
-        className="text-2xl font-bold cursor-pointer tracking-tight bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
-        onClick={(e) => {
-          e.stopPropagation();
-          window.location.href = "/";
-        }}
-        aria-label="Home"
-      >
-        Parijat Controlware Inc.
-      </div>
-
-      <div className="flex items-center space-x-6">
-        <NavButton onClick={() => window.location.href = "/"}>Home</NavButton>
-        <NavButton onClick={(e) => { e.stopPropagation(); onTabClick("about"); }}>About Us</NavButton>
-
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none"
-          title="Toggle Theme"
+    <nav className="fixed top-0 left-0 right-0 z-50 py-4 bg-black/60 backdrop-blur-md border-b border-white/10 text-white transition-colors duration-300 dark:bg-premium-black/90 dark:border-premium-border/50">
+      <div className="max-w-[95%] xl:max-w-[90rem] mx-auto px-6 flex items-center justify-between">
+        <div
+          className="text-3xl font-bold cursor-pointer tracking-tight bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+          onClick={(e) => {
+            e.stopPropagation();
+            window.location.href = "/";
+          }}
+          aria-label="Home"
         >
-          {theme === 'dark' ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}
-        </button>
+          Parijat Controlware Inc.
+        </div>
 
-        {isLoggedIn ? (
-          <Profile token={token} onLogout={onLogout} />
-        ) : (
-          <div className="flex space-x-4">
-            <LoginButton onClick={(e) => { e.stopPropagation(); onLoginClick(e); }}>
-              Login
-            </LoginButton>
-            <LoginButton onClick={(e) => { e.stopPropagation(); onRegisterClick(e); }} variant="primary">
-              Register
-            </LoginButton>
+        <div className="flex items-center gap-8 md:gap-12">
+          <div className="flex items-center gap-8">
+            <NavButton onClick={() => window.location.href = "/"}>Home</NavButton>
+            <NavButton onClick={(e) => { e.stopPropagation(); onTabClick("about"); }}>About Us</NavButton>
           </div>
-        )}
+
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggleTheme}
+              className="p-3 rounded-full hover:bg-white/10 transition-colors focus:outline-none"
+              title="Toggle Theme"
+            >
+              {theme === 'dark' ? <FiSun className="w-6 h-6" /> : <FiMoon className="w-6 h-6" />}
+            </button>
+
+            {isLoggedIn ? (
+              <Profile token={token} onLogout={onLogout} />
+            ) : (
+              <div className="flex gap-4">
+                <LoginButton onClick={(e) => { e.stopPropagation(); onLoginClick(e); }}>
+                  Login
+                </LoginButton>
+                <LoginButton onClick={(e) => { e.stopPropagation(); onRegisterClick(e); }} variant="primary">
+                  Register
+                </LoginButton>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </nav>
   );
@@ -51,7 +57,7 @@ const Navbar = ({ onLoginClick, onRegisterClick, onTabClick, isLoggedIn, onLogou
 const NavButton = ({ children, onClick }) => (
   <button
     onClick={onClick}
-    className="text-sm font-medium text-white/80 hover:text-white transition-colors capitalize bg-transparent border-none cursor-pointer"
+    className="text-lg font-semibold text-white/90 hover:text-blue-400 transition-colors capitalize bg-transparent border-none cursor-pointer tracking-wide"
   >
     {children}
   </button>

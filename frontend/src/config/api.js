@@ -1,4 +1,3 @@
 // src/config/api.js
-// Localhost-only configuration for development
-// Backend runs on http://127.0.0.1:8000
-export const API = "http://127.0.0.1:8001";
+// Works for Create-React-App (REACT_APP_*) and falls back to localhost for dev.
+export const API = "https://agent-4-plc.onrender.com" || "http://127.0.0.1:8000";

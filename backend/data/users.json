@@ -18,5 +18,12 @@
     "email": "testuser4292@example.com",
     "hashed_password": "$2b$12$zCiGA.ZMbrW4p.kZ8DQ2yOe9W3oIQ82KyTVxTAmP0yjNrFSZuCllK",
     "_id": "697ecc315bcdaa6fa1db3447"
+  },
+  {
+    "email": "new@gmail.com",
+    "hashed_password": "$2b$12$.NK/ZgibY7ST.hNHhveZPOjv.EU5sZOeb4MQHxjG8bU3wUV3PsVJa",
+    "_id": "69831aa05b3efd6769273f31",
+    "name": "Lakshmi",
+    "phone": "17139350900"
   }
 ]
