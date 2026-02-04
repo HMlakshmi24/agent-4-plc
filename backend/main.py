@@ -24,7 +24,7 @@ app = FastAPI(title="Agent4PLC Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"]
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -41,7 +41,7 @@ app.include_router(profile.router)
 @app.get("/")
 async def root():
     """Health check endpoint"""
-    return {"status": "Agent4PLC Backend Running on Localhost", "version": "2.0"}
+    return {"status": "Agent4PLC Backend Running ", "version": "2.0"}
 
 if __name__ == "__main__":
     import uvicorn
