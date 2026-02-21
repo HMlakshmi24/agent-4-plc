@@ -32,14 +32,7 @@ const InteractiveCanvas = ({ children, initialScale = 0.95 }) => {
             e.preventDefault();
             const zoomSensitivity = 0.001;
             const newScale = Math.min(Math.max(0.1, scale - e.deltaY * zoomSensitivity), 4);
-
-            // Zoom towards mouse pointer logic would go here, 
-            // but for simplicity/stability we'll zoom center or just scale
             setScale(newScale);
-        } else {
-            // Pan if not zooming? Or just standard scroll? 
-            // Let's allow standard scroll if not capturing, but we want a canvas feel.
-            // Actually, let's map wheel to pan if logic dictates, but standard is Zoom on Ctrl+Wheel.
         }
     };
 

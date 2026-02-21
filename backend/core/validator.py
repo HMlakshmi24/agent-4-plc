@@ -1,53 +1,80 @@
 import json
 
 def validate_layout(raw_json: str):
-
+    """
+    Validates the HMI JSON from AI.
+    Accepts new schema: { title, theme, components[{id,type,label,x,y,state,value}] }
+    Also accepts legacy schema: { system_name, style, components[...] }
+    """
+    # ── Parse ────────────────────────────────────────────────────
     try:
         data = json.loads(raw_json)
-    except:
-        # Try to clean markdown if allowed, but strict rules say "No markdown".
-        # However, to be "Production-Stable", we should probably handle it if the LLM slips.
+    except Exception:
         try:
-             if "```" in raw_json:
-                 cleaned = raw_json.split("```json")[-1].split("```")[0].strip()
-                 if not cleaned: # Handle case where it might be just ```
-                     cleaned = raw_json.split("```")[-1].split("```")[0].strip()
-                 data = json.loads(cleaned)
-             else:
-                 raise ValueError
-        except:
-             raise ValueError("Invalid JSON format from AI")
+            if "```" in raw_json:
+                cleaned = raw_json.split("```json")[-1].split("```")[0].strip()
+                if not cleaned:
+                    cleaned = raw_json.split("```")[1].split("```")[0].strip()
+                data = json.loads(cleaned)
+            else:
+                raise ValueError
+        except Exception:
+            raise ValueError("AI returned invalid JSON — cannot parse.")
 
-    if data.get("style") not in ["dashboard", "pid"]:
-        raise ValueError(f"Invalid style: {data.get('style')}")
+    # ── Normalise title/system_name ──────────────────────────────
+    if "title" not in data and "system_name" in data:
+        data["title"] = data["system_name"]
+    if "system_name" not in data and "title" in data:
+        data["system_name"] = data["title"]
+    if "title" not in data and "system_name" not in data:
+        data["title"] = "HMI Dashboard"
+        data["system_name"] = "HMI Dashboard"
 
-    if "system_name" not in data:
-        raise ValueError("Missing system_name")
-
+    # ── Require components ───────────────────────────────────────
     components = data.get("components")
+    if not isinstance(components, list) or len(components) == 0:
+        raise ValueError("No components returned by AI.")
 
-    if not isinstance(components, list) or len(components) < 4:
-        raise ValueError("Minimum 4 components required")
-
+    # ── Normalise each component ─────────────────────────────────
     used_positions = set()
+    for i, comp in enumerate(components):
+        # Ensure id
+        if "id" not in comp:
+            comp["id"] = f"{comp.get('type', 'c')}_{i}"
 
-    for comp in components:
-        for field in ["id", "type", "name", "x", "y"]:
-            if field not in comp:
-                raise ValueError(f"Missing {field} in component")
-        
-        # Grid/Overlap Check (Simple exact match)
-        # In production, we might want a radius check, but strictly following requirements:
+        # Ensure type
+        if "type" not in comp:
+            raise ValueError(f"Component {i} missing 'type'")
+
+        # Ensure label (new schema uses 'label', legacy uses 'name')
+        if "label" not in comp and "name" in comp:
+            comp["label"] = comp["name"]
+        if "name" not in comp and "label" in comp:
+            comp["name"] = comp["label"]
+        if "label" not in comp:
+            comp["label"] = comp["type"]
+        if "name" not in comp:
+            comp["name"] = comp["label"]
+
+        # Ensure x, y — auto-assign if missing
+        if "x" not in comp:
+            comp["x"] = 80 + (i % 5) * 160
+        if "y" not in comp:
+            comp["y"] = 100 + (i // 5) * 160
+
+        # Avoid exact overlaps — shift if needed
         pos = (comp["x"], comp["y"])
-
-        if pos in used_positions:
-             # Just warn or shift? User said "Coordinates must not overlap" (Rule).
-             # Validator raises ValueError as per user code.
-             raise ValueError(f"Overlapping components at {pos}")
-
+        offset = 0
+        while pos in used_positions:
+            offset += 20
+            pos = (comp["x"] + offset, comp["y"])
+        comp["x"] = pos[0]
         used_positions.add(pos)
 
-    if data["style"] == "pid" and len(components) < 5:
-        raise ValueError("P&ID requires minimum 5 components")
+        # Default state and value
+        if "state" not in comp:
+            comp["state"] = "stopped"
+        if "value" not in comp:
+            comp["value"] = 0
 
     return data
