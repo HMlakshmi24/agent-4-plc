@@ -38,17 +38,17 @@
 
 # config.py
 
-# Model settings
-chat_model = "gpt-3.5-turbo" #"gpt-4o"  #  or chose according to  which model you have access "gpt-3.5-turbo"   
+# OpenAI settings
+chat_model = "gpt-4o-mini" 
 embedding_model = "text-embedding-ada-002" 
 
-# OpenAI credentials
-openai_api_key = ""  
-openai_base_url = "https://api.openai.com/v1"
+import os
+from dotenv import load_dotenv
 
-# DeepSeek
-deepseek_api_key = "sk-*********************************"                         
-deepseek_base_url = "https://api.deepseek.com/v1"
+load_dotenv()
+
+openai_api_key = os.getenv("OPENAI_API_KEY")
+openai_base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
 
 # Optional settings
 max_tokens = 4500

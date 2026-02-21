@@ -1,83 +1,99 @@
-# Agents4PLC
-A Multi-Agent System for Programmable Logic Controller (PLC) Code Generation based on IEC-61131 standard. The paper see:
-[Agents4PLC: Automating Closed-loop PLC Code Generation and Verification in Industrial Control Systems using LLM-based Agents](https://arxiv.org/abs/2410.14209).
+# Agent4PLC - Setup & Deployment Guide
 
-![Overview of our workflow.](pics/workflow.png)
+## Local Setup (Running Offline)
 
-## Dataset
+Steps to run the system locally on a new PC:
 
-The dataset is composed of benchmark dataset and RAG dataset, where released benchmarks are collected 
-from open-source Github programs and we manually convert instruction into formalized and plcverif 
-compatiable properties.
+1. Open a terminal in the project folder.
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Setup Environment Variables:
+   Create a `backend/.env` file with the following keys:
+   ```env
+   # 1. MongoDB Connection (Required)
+   MONGO_URI=mongodb+srv://<username>:<password>@<cluster-url>/?retryWrites=true&w=majority
+   
+   # 2. OpenAI API Key (Required)
+   OPENAI_API_KEY=sk-proj-YOUR_ACTUAL_KEY
+   
+   # 3. Optional: Host and Port
+   PORT=8000
+   HOST=0.0.0.0
+   ```
+4. Start the backend server:
+   ```bash
+   uvicorn backend.main:app --reload
+   ```
+5. Open the API docs:
+   http://127.0.0.1:8000/docs
+6. Use the `/offline/generate` endpoint for generation.
 
-RAG dataset includes ST examples and tags are collected from [OSCAT dataset](http://www.oscat.de).
+---
 
-Industrial control documents and unreleased part of benchmark are collected from our partner companies
-which are not prepared to be released.
+## Deployment Guide (Render & Vercel)
 
+This section details how to deploy your frontend to **Vercel** and your backend to **Render**.
 
-## Source Code Organization
+### Where are keys used in the code?
 
-benchmark/ show the constructed tasks for plc code generation & verification task with patterns compatiable for plcverif verification.
+If you need to manually check where the configurations are used or hardcode them directly, here are the exact files and lines:
 
-result/ demonstrate the experiment statistics and detailed responses.
+**A. MongoDB Connection:**
+- **File:** `backend/db.py`
+- **Line 8:** `MONGO_URI = os.getenv("MONGO_URI")`
+- *(To hardcode instead: `MONGO_URI = "mongodb+srv://..."`)*
 
-prompts/ contain specified prompts for each agent, including agent prompt engineering ways mentioned in our paper to 
-enhance ability of agents.
+**B. OpenAI API Key:**
+There are four places where the OpenAI key is fetched from the environment variable (`os.getenv("OPENAI_API_KEY")`):
+1. `backend/openai_client.py` (Line 7)
+2. `backend/routes/config.py` (Line 50)
+3. `backend/routes/langchain_create_agent.py` (Line 29)
+4. `backend/domain_detector.py` (Line 9)
 
-LangChain/, MetaGPT/, LLM4PLC_reproduce/ or other folders corresponding to a certain multi agent framework's contain the implementation of the framework. You are free to create one for your own task, as long as the output satisfy the verification standards. (not available)
+### Vercel Backend Link
 
-Notice: you should adjust content in config otherwise our framework could not work!
+To point your Vercel frontend to the Render backend, configure it here:
+- **File:** `frontend/.env`
+- Add: `VITE_API_URL=https://<your-render-backend-url>.onrender.com`
 
-## Documents
+*Note: The system uses **only** standard OpenAI and **MongoDB**. OpenRouter and SQLite are not used.*
 
-For tools related to st compilation and smv verification not provided in src, see src/README.md.
-For benchmark's construction process and how to use it, see benchmark/readme.md.
+---
 
-## Recommended Agent Related Tools & Works
+## 2. Deploying the Backend to Render
 
-Despite that our detailed code cannot be released due to cooperation with company, the following propose some recommended types 
-to adjust multi-agent system, enhance ability of certain agents and reproduce experiments in out paper:  
+Since the backend is a Python (FastAPI/Bottle) server, **Render** is the best choice.
 
-| Agent       | Link |
-| :--- | ----------- |
-| MetaGPT     | https://github.com/geekan/MetaGPT                |
-| LangGraph   | https://github.com/langchain-ai/langgraph        |
-| ChatDev     | https://github.com/OpenBMB/ChatDev               |
-| MapCoder    | [MapCoder: Multi-Agent Code Generation for Competitive Problem Solving](https://arxiv.org/abs/2405.11403) |
+### Steps:
+1. Push your repository to **GitHub**.
+2. Log into [Render.com](https://render.com) and create a new **Web Service**.
+3. Connect your GitHub repository.
+4. **Configuration Settings**:
+   - **Root Directory:** `backend` (Important!)
+   - **Environment:** `Python 3`
+   - **Build Command:** `pip install -r ../requirements.txt`
+   - **Start Command:** `uvicorn run_backend:app --host 0.0.0.0 --port $PORT` (Adjust based on your actual main entry file).
+5. **Environment Variables**:
+   Under the "Environment" section in Render, add:
+   - `MONGO_URI` = `mongodb+srv://...`
+   - `OPENAI_API_KEY` = `sk-...`
+6. Click **Deploy**. Render will give you a backend URL (e.g., `https://agent4plc-backend.onrender.com`). *Copy this URL.*
 
+---
 
-# 📦 Installation & Setup
+## 3. Deploying the Frontend to Vercel
 
-- ### Clone the Repository
-  > git clone
+The frontend (React/Vite) can easily be deployed to **Vercel**.
 
-  > cd agent-4-plc
-
-- ### Create virtual environment
-  > Install python 3.10.0 from website.
-
-  > py -3.10 -m venv venv
-
-- ### To Activate virtual environment for (Windows)
-  > venv\Scripts\activate
-
-- ### Install all the dependencies in virtual environment
-  > pip install -r requirements.txt
-
-- ### Run Backend
-  > uvicorn backend.main:app --reload
-
-- ### Run Frontend
-  > cd Frontend
-
-  > npm install
-
-  > npm run dev
-
-- ## NOTE:
-  - Please use your own src/config.py - *OpenAI credentials*
-  - Please use your own .env file
-
-
-
+### Steps:
+1. Log into [Vercel.com](https://vercel.com) and click **Add New Project**.
+2. Import your GitHub repository.
+3. **Configuration Settings**:
+   - **Framework Preset:** `Vite` or `React` (Vercel usually detects this automatically).
+   - **Root Directory:** Edit this and select the `frontend` folder.
+4. **Environment Variables**:
+   You need to point the frontend to your newly deployed Render backend. Add standard `VITE_` env variables if applicable:
+   - `VITE_API_URL` = `https://agent4plc-backend.onrender.com` (Your Render URL).
+5. Click **Deploy**. Your frontend will be live in minutes.

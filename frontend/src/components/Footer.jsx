@@ -1,133 +1,65 @@
 import React from 'react';
+import { FaGithub, FaLinkedin, FaTwitter } from 'react-icons/fa';
 
-const Footer = () => {
+const Footer = ({ onPrivacy, onTerms, onHelp, onTicket, onAbout }) => {
   return (
-    <div style={{ backgroundColor: '#f3f8fc', color: '#002b5b', padding: '3rem 1rem', fontFamily: 'Arial, sans-serif' }}>
-      {/* Top Contact Section */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '12rem',
-        marginBottom: '6rem',
-      }}>
-        {/* <div style={{ textAlign: 'center' }}>
-          <div style={{ fontWeight: 'bold' }}>Call us</div>
-          <div>+1-234-567-890</div>
-        </div> */}
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontWeight: 'bold' }}>Write to us</div>
-          <div>hm.lakshmi@parijat.com</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontWeight: 'bold' }}>Address</div>
-          <div>9603 Neuens Rd. Houston, TX. 77080</div>
-        </div>
-      </div>
-
-      {/* Bottom Content Section */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        flexWrap: 'wrap',
-        gap: '12rem',
-        marginBottom: '2rem',
-      }}>
-        {/* About Us */}
-        <div style={{ maxWidth: '250px' }}>
-          <img src="https://parijat.com/wp-content/uploads/2023/08/ezgif.com-gif-maker-87.webp" alt="Parijat Logo" style={{ width: '180px', marginBottom: '1rem' }} />
-          <p style={{ fontSize: '0.9rem' }}>
-            Since 1989, Our Team Has Succeeded In Understanding The Needs Of The Industry And Creating Reliable Products To Serve Them All.
-          </p>
-        </div>
-
-        {/* Quick Links */}
-        {/* <div>
-          <h4>Quick Links</h4>
-          <p>Products</p>
-          <p>Services</p>
-          <p>Solutions</p>
-          
-        </div> */}
-
-        {/* Important Links */}
-        {/* <div>
-          <h4>Important Links</h4>
-          <p>About Us</p>
-          <p>Contact Us</p>
-        
-          <p>Disclaimer</p>
-        </div> */}
-
-
-        
-        {/* Follow Us */}
-        <div>
-          <h4>For More Visit..</h4>
-          <p>
-            <a
-              href="https://parijat.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: '#002b5b', textDecoration: 'none' }}
-            >
-              www.parijat.com
-            </a>
-          </p>
-
-        </div>
-        {/* <div>
-          <h4>Follow Us</h4>
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-            <div style={{
-              backgroundColor: '#002b5b',
-              borderRadius: '50%',
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              color: 'white',
-              fontSize: '1rem'
-            }}>
-              in
-            </div>
-            <div style={{
-              backgroundColor: '#002b5b',
-              borderRadius: '50%',
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              color: 'white',
-              fontSize: '1rem'
-            }}>
-              ▶
+    <footer className="bg-slate-900 text-white border-t border-slate-800 pt-16 pb-8">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+          {/* Logo & Info */}
+          <div className="col-span-1 md:col-span-1">
+            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+              <span className="text-blue-500">◆</span> Automind AI
+            </h2>
+            <p className="text-slate-400 text-sm leading-relaxed mb-6">
+              AI-Powered PLC & HMI Automation Platform.
+            </p>
+            <div className="flex gap-4">
+              <a href="#" className="text-slate-400 hover:text-blue-600 transition-colors"><FaGithub size={20} /></a>
+              <a href="#" className="text-slate-400 hover:text-blue-600 transition-colors"><FaLinkedin size={20} /></a>
+              <a href="#" className="text-slate-400 hover:text-blue-600 transition-colors"><FaTwitter size={20} /></a>
             </div>
           </div>
-        </div> */}
-      </div>
 
-      {/* Bottom Bar */}
-      <div style={{ backgroundColor: 'black', color: 'white', padding: '1rem', textAlign: 'center' }}>
-        <p style={{ margin: 0 }}>
-          © Copyright{' '}
-          <a
-            href="https://parijat.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: '#4db8ff', textDecoration: 'none', fontWeight: 'bold' }}
-          >
-            Parijat
-          </a>
-          , All Rights Reserved.
-        </p>
+          {/* Product Column */}
+          <div>
+            <h3 className="text-slate-900 dark:text-white font-bold mb-4">Product</h3>
+            <ul className="space-y-3 text-sm text-slate-400">
+              <li><button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-blue-400 transition-colors text-left">Features</button></li>
+              <li><button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-blue-400 transition-colors text-left">PLC Generator</button></li>
+              <li><button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-blue-400 transition-colors text-left">HMI Builder</button></li>
+            </ul>
+          </div>
+
+          {/* Company Column */}
+          <div>
+            <h3 className="text-slate-900 dark:text-white font-bold mb-4">Company</h3>
+            <ul className="space-y-3 text-sm text-slate-400">
+              <li><button onClick={onAbout} className="hover:text-blue-400 transition-colors text-left">About Us</button></li>
+              <li><button onClick={onAbout} className="hover:text-blue-400 transition-colors text-left">Contact</button></li>
+            </ul>
+          </div>
+
+          {/* Support Column */}
+          <div>
+            <h3 className="text-slate-900 dark:text-white font-bold mb-4">Support</h3>
+            <ul className="space-y-3 text-sm text-slate-400">
+              <li><button onClick={onHelp} className="hover:text-blue-400 transition-colors text-left">Help Center</button></li>
+              <li><button onClick={onTicket} className="hover:text-blue-400 transition-colors text-left">Submit Ticket</button></li>
+              <li><a href="mailto:hm.lakshmi@parijat.com" className="hover:text-blue-400 transition-colors">hm.lakshmi@parijat.com</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
+          <p>© {new Date().getFullYear()} Parijat Controlware, Inc. All rights reserved.</p>
+          <div className="flex gap-6">
+            <button onClick={onPrivacy} className="hover:text-slate-300">Privacy Policy</button>
+            <button onClick={onTerms} className="hover:text-slate-300">Terms of Service</button>
+          </div>
+        </div>
       </div>
-    </div>
+    </footer>
   );
 };
-
 export default Footer;

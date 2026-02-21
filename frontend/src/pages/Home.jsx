@@ -1,97 +1,106 @@
-// pages/Home.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
-import InfoSection from '../components/plc_to_st';
+import PlcGeneratorV2 from '../components/PlcGeneratorV2';
+import HmiGeneratorV3 from '../components/HmiGeneratorV3';
 import { LoginModal, RegisterModal } from '../components/LoginModal';
 import Footer from '../components/Footer';
 import TransparentCard from '../components/TransparentCard';
-import Hmi from '../components/Hmi';
+import { useAuth } from '../context/AuthContext';
+import LandingPage from '../components/LandingPage';
+import { PrivacyModal, TermsModal, HelpModal, SubmitTicketModal, AboutModal } from '../components/InfoModals';
 
 const Home = () => {
+  const { user, logout } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeTab, setActiveTab] = useState(null);
-  const [showLoggedInMsg, setShowLoggedInMsg] = useState(false);
 
-  useEffect(() => {
-    const stored = localStorage.getItem('isLoggedIn') === 'true';
-    setIsLoggedIn(stored);
-  }, []);
+  // Content Modals State
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showTicket, setShowTicket] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   const handleLoginSuccess = () => {
-    localStorage.setItem('isLoggedIn', 'true');
-    setIsLoggedIn(true);
     setShowLogin(false);
-
-    setShowLoggedInMsg(true);
-    setTimeout(() => {
-      setShowLoggedInMsg(false);
-    }, 2000);
   };
 
   const handleRegisterSuccess = (username) => {
-    alert(`Registered successfully as ${username}`);
     setShowRegister(false);
+    setShowLogin(true);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    setIsLoggedIn(false);
-    setActiveTab(null);
-  };
+  // 1. GUEST VIEW: Landing Page
+  if (!user) {
+    return (
+      <>
+        <LandingPage
+          onLogin={() => setShowLogin(true)}
+          onRegister={() => setShowRegister(true)}
+        />
 
+        <Footer
+          onPrivacy={() => setShowPrivacy(true)}
+          onTerms={() => setShowTerms(true)}
+          onHelp={() => setShowHelp(true)}
+          onTicket={() => setShowTicket(true)}
+          onAbout={() => setShowAbout(true)}
+        />
+
+        {/* Auth Modals */}
+        {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLoginSuccess={handleLoginSuccess} />}
+        {showRegister && <RegisterModal onClose={() => setShowRegister(false)} onRegisterSuccess={handleRegisterSuccess} />}
+
+        {/* Content Modals */}
+        {showPrivacy && <PrivacyModal onClose={() => setShowPrivacy(false)} />}
+        {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
+        {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
+        {showTicket && <SubmitTicketModal onClose={() => setShowTicket(false)} />}
+        {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
+      </>
+    );
+  }
+
+  // 2. AUTHENTICATED VIEW: App Dashboard
   return (
     <div onClick={() => setActiveTab(null)}>
       <Navbar
-        onLoginClick={(e) => {
-          e.stopPropagation();
-          setShowLogin(true);
-        }}
-        onRegisterClick={(e) => {
-          e.stopPropagation();
-          setShowRegister(true);
-        }}
+        onLoginClick={() => setShowLogin(true)}
+        onRegisterClick={() => setShowRegister(true)}
         onTabClick={(tab) => setActiveTab(tab)}
-        isLoggedIn={isLoggedIn}
-        onLogout={handleLogout}
+        user={user}
+        onLogout={logout}
       />
-      <Hero />
+
+      {/* Dashboard Content */}
+      <PlcGeneratorV2 />
+
+      {/* Industrial Separator */}
+      <div className="w-full flex justify-center bg-transparent my-0">
+        <div className="w-[90%] h-[1px] bg-slate-200 dark:bg-slate-700"></div>
+      </div>
+
+      <HmiGeneratorV3 />
+
+      <Footer
+        onPrivacy={() => setShowPrivacy(true)}
+        onTerms={() => setShowTerms(true)}
+        onHelp={() => setShowHelp(true)}
+        onTicket={() => setShowTicket(true)}
+        onAbout={() => setShowAbout(true)}
+      />
+
       {activeTab && <TransparentCard tab={activeTab} onClose={() => setActiveTab(null)} />}
-      <InfoSection />
-      <Hmi />
-      <Footer />
-      {showLogin && (
-        <LoginModal
-          onClose={() => setShowLogin(false)}
-          onLoginSuccess={handleLoginSuccess}
-        />
-      )}
-      {showRegister && (
-        <RegisterModal
-          onClose={() => setShowRegister(false)}
-          onRegisterSuccess={handleRegisterSuccess}
-        />
-      )}
-      {showLoggedInMsg && (
-        <div style={{
-          position: 'fixed',
-          top: '20%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          backgroundColor: 'grey',
-          color: 'white',
-          padding: '1rem 2rem',
-          borderRadius: '8px',
-          fontSize: '1.2rem',
-          zIndex: 10000,
-          boxShadow: '0 0 10px rgba(0,0,0,0.3)'
-        }}>
-          You are logged in Successfully!!.
-        </div>
-      )}
+
+      {/* Content Modals for Authenticated Users too */}
+      {showPrivacy && <PrivacyModal onClose={() => setShowPrivacy(false)} />}
+      {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
+      {showTicket && <SubmitTicketModal onClose={() => setShowTicket(false)} />}
+      {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
     </div>
   );
 };

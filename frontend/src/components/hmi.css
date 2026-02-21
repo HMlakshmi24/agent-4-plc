@@ -51,106 +51,121 @@
   box-shadow: 0 8px 22px rgba(106, 90, 205, 0.8);
 }
 
-/* Modal Styles */
+/* Features Badge */
+.hmi-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 1.5rem;
+}
+
+.feature-badge {
+  background: rgba(0, 212, 255, 0.15);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  color: #00d4ff;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Modal Overlay */
 .hmi-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(10, 10, 25, 0.9);
+  background: rgba(10, 10, 25, 0.92);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 2000;
   padding: 1rem;
+  backdrop-filter: blur(4px);
 }
 
+/* Modal */
 .hmi-modal {
-  background: #16162a;
+  background: linear-gradient(135deg, #16162a 0%, #1a1a2e 100%);
   color: #eee;
-  padding: 3rem 2.5rem;
-  border-radius: 20px;
+  padding: 2.5rem;
+  border-radius: 16px;
   width: 95%;
-  max-width: 700px;
-  min-height: 420px;
+  max-width: 750px;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  text-align: center;
-  box-shadow: 0 10px 28px rgba(0, 191, 255, 0.6);
-  border: 1px solid rgba(106, 90, 205, 0.4);
+  overflow-y: auto;
+  box-shadow: 0 0 40px rgba(0, 191, 255, 0.5), inset 0 0 20px rgba(0, 191, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.2);
 }
 
 .hmi-modal h3 {
   margin-bottom: 1.5rem;
   font-size: 1.7rem;
-  color: #7b68ee;
+  background: linear-gradient(135deg, #00d4ff, #7b68ee);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
 }
 
-.hmi-modal textarea {
-  width: 100%;
-  height: 180px;
-  border-radius: 10px;
-  border: none;
-  padding: 1.2rem;
-  margin-bottom: 2rem;
-  background: #202040;
-  color: #fff;
-  resize: none;
-  font-size: 1.05rem;
-  line-height: 1.5;
-}
-
-.hmi-modal-buttons {
-  display: flex;
-  justify-content: space-between;
-  gap: 1.2rem;
-  margin-top: 1rem;
-}
-
-.cancel-btn,
-.generate-btn,
-.download-btn {
-  flex: 1;
-  padding: 1rem 1.4rem;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: bold;
-}
-
-.cancel-btn {
-  background: #444;
-  color: #fff;
-}
-
-.cancel-btn:hover {
-  background: #666;
-}
-
-.generate-btn {
-  background: #0077ff;
-  color: #fff;
-}
-
-.generate-btn:hover {
-  background: #3399ff;
-}
-
-.download-btn {
-  background: #00c853;
-  color: #fff;
-  margin-top: 1rem;
-}
-
-.download-btn:hover {
-  background: #00e676;
-}
-
-.hmi-success p {
+/* Import Section */
+.import-section {
   margin-bottom: 1.5rem;
-  font-size: 1.2rem;
-  color: #a5d6a7;
+}
+
+.import-controls {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* Result Container */
+.hmi-result {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.hmi-result h3 {
+  color: #00ff00;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* Scrollbar for modal */
+.hmi-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.hmi-modal::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.hmi-modal::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.4);
+  border-radius: 10px;
+}
+
+.hmi-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.6);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hmi-section {
+    padding: 6rem 2rem;
+  }
+  
+  .hmi-text h2 {
+    font-size: 1.8rem;
+  }
+  
+  .hmi-modal {
+    max-height: 95vh;
+    padding: 1.5rem;
+  }
 }

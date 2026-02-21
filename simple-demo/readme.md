@@ -1,1 +1,0 @@
-code with directly generated code and code with validation-fixing-recoding process.

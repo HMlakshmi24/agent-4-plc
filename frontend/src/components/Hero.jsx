@@ -49,13 +49,13 @@ import "./Hero.css";
 
 const Hero = () => {
   return (
-    <div className="hero-container">
-      {/* Using only hero image now */}
+    <div className="hero-container" style={{ width: "100%", height: "auto", overflow: "hidden" }}>
+      {/* Using only hero image now - Set to auto height to prevent cropping of text in image */}
       <img
         src={hero}
-        alt="Hero"
+        alt="HeroBackground"
         className="hero-image"
-        style={{ width: "100%", height: "75vh", objectFit: "cover" }}
+        style={{ width: "100%", height: "auto", display: "block" }}
       />
     </div>
   );

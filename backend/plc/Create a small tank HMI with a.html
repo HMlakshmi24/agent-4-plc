@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Generated HMI Interface - Create a small tank HMI with a">
+    <meta name="generator" content="Agent4PLC AI HMI Designer">
+    <meta name="created" content="2026-02-09T19:36:23.702698">
+    <title>Create a small tank HMI with a - Human Machine Interface</title>
+</head>
+<body>
+    ```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank HMI</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #00d4ff; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #00d4ff; padding-bottom: 20px; }
+        .header h1 { font-size: 2.5em; text-shadow: 0 0 20px rgba(0, 212, 255, 0.5); }
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .panel { background: rgba(0, 0, 0, 0.6); border: 2px solid #00d4ff; border-radius: 8px; padding: 20px; box-shadow: 0 0 20px rgba(0, 212, 255, 0.2); backdrop-filter: blur(10px); }
+        .panel h2 { border-bottom: 2px solid #00d4ff; padding-bottom: 10px; margin-bottom: 15px; color: #00d4ff; }
+        .equipment { background: rgba(20, 40, 60, 0.8); border: 1px solid #00d4ff; border-radius: 6px; padding: 15px; margin-bottom: 15px; }
+        .status { display: flex; justify-content: space-between; margin-bottom: 10px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; }
+        .status-value { color: #00ff00; font-weight: bold; }
+        .btn { flex: 1; padding: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-right: 5px; }
+        .btn-start { background: linear-gradient(135deg, #00ff00, #00cc00); color: #000; box-shadow: 0 0 10px rgba(0, 255, 0, 0.5); }
+        .btn-stop { background: linear-gradient(135deg, #ff3333, #cc0000); color: #fff; box-shadow: 0 0 10px rgba(255, 51, 51, 0.5); }
+        .tank-container { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .tank { width: 150px; height: 250px; border: 3px solid #00d4ff; border-radius: 10px; position: relative; background: rgba(0, 20, 40, 0.8); overflow: hidden; }
+        .tank-fill { position: absolute; bottom: 0; width: 100%; background: linear-gradient(to top, #00ff00, #00cc00); transition: height 0.5s; opacity: 0.7; }
+    </style>
+</head>
+<body>
+    <div class='header'>
+        <h1>Small Tank HMI</h1>
+    </div>
+    <div class='dashboard'>
+        <div class='panel'>
+            <h2>Controls</h2>
+            <div class='equipment'>
+                <div class='status'>
+                    <span>Pump Status:</span>
+                    <span class='status-value'>Off</span>
+                </div>
+                <div>
+                    <button class='btn btn-start'>Start</button>
+                    <button class='btn btn-stop'>Stop</button>
+                </div>
+            </div>
+        </div>
+        <div class='panel'>
+            <h2>Tank Level</h2>
+            <div class='tank-container'>
+                <div class='tank'>
+                    <div class='tank-fill' style='height: 50%;'></div>
+                </div>
+                <div class='status'>
+                    <span>Level:</span>
+                    <span class='status-value'>50%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+```
+This HTML file creates a small tank HMI featuring a pump control with start and stop buttons, as well as a tank level indicator showing the current fill percentage. The visuals follow the high-end template specified in the guidelines, providing an aesthetically pleasing and functional layout.
+</body>
+</html>

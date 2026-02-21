@@ -1,0 +1,71 @@
+{
+    "codesys": {
+        "standard": "IEC 61131-3",
+        "language_support": [
+            "ST",
+            "LD",
+            "FBD",
+            "SFC"
+        ],
+        "strict_timer_call": true,
+        "require_output_reset": true,
+        "case_sensitive": false,
+        "data_types": "Standard IEC (BOOL, INT, REAL, TIME)",
+        "comments": "(* ... *)"
+    },
+    "siemens": {
+        "standard": "TIA Portal IEC",
+        "language_support": [
+            "ST",
+            "LD",
+            "FBD",
+            "SCL"
+        ],
+        "strict_timer_call": true,
+        "require_output_reset": true,
+        "case_sensitive": true,
+        "data_types": "Siemens specific (Bool, Int, Real, Time, S5Time)",
+        "comments": "// ... or (* ... *)"
+    },
+    "allen-bradley": {
+        "standard": "Rockwell IEC-style",
+        "language_support": [
+            "ST",
+            "LD",
+            "FBD"
+        ],
+        "strict_timer_call": true,
+        "require_output_reset": true,
+        "case_sensitive": false,
+        "data_types": "Rockwell specific (BOOL, DINT, REAL, TIMER)",
+        "comments": "// ..."
+    },
+    "beckhoff": {
+        "standard": "TwinCAT 3 (IEC 61131-3)",
+        "language_support": [
+            "ST",
+            "LD",
+            "FBD"
+        ],
+        "strict_timer_call": true,
+        "require_output_reset": true,
+        "case_sensitive": false,
+        "data_types": "Standard IEC",
+        "comments": "// ..."
+    },
+    "generic": {
+        "standard": "Strict IEC 61131-3",
+        "language_support": [
+            "ST",
+            "LD",
+            "FBD",
+            "SFC",
+            "IL"
+        ],
+        "strict_timer_call": true,
+        "require_output_reset": true,
+        "case_sensitive": false,
+        "data_types": "Standard IEC",
+        "comments": "(* ... *)"
+    }
+}

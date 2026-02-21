@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import "./plc_to_st.css";
+import "./unified-modal.css";
 import { API } from '../config/api'; 
 
 const PlcGenerator = () => {
@@ -8,10 +9,15 @@ const PlcGenerator = () => {
   const [requirement, setRequirement] = useState("");
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
+  const [error, setError] = useState("");
 
   const handleGenerate = async () => {
-    if (!requirement.trim()) return alert("Please enter a requirement!");
-
+    if (!requirement.trim()) {
+      setError("Please enter a requirement!");
+      return;
+    }
+    
+    setError("");
     setLoading(true);
     try {
       const response = await fetch(`${API}/plc/generate`, {
@@ -20,15 +26,24 @@ const PlcGenerator = () => {
         body: JSON.stringify({ requirement }),
       });
 
-      if (!response.ok) throw new Error("Error generating code");
+      if (!response.ok) {
+        let errText = await response.text();
+        try {
+          const j = JSON.parse(errText);
+          errText = j.detail || j.message || errText;
+        } catch (e) {}
+        setError(`Generation failed: ${errText}`);
+        setLoading(false);
+        return;
+      }
 
       const data = await response.json();
       console.log("Backend response:", data);
 
       setGenerated(true); // Show success message & download button
     } catch (err) {
-      alert("Failed to generate ST code. Please try again.");
-    } finally {
+      console.error(err);
+      setError(err?.message || "Failed to generate ST code. Please try again.");
       setLoading(false);
     }
   };
@@ -41,9 +56,10 @@ const PlcGenerator = () => {
   const handleTryNow = () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please login first!");
+      setError("Please login first!");
       return;
     }
+    setError("");
     setShowModal(true);
   };
 
@@ -88,6 +104,7 @@ const PlcGenerator = () => {
               {!generated ? (
                 <>
                   <h3>Enter Requirement</h3>
+                  {error && <div className="error-message">⚠️ {error}</div>}
                   <textarea
                     value={requirement}
                     onChange={(e) => setRequirement(e.target.value)}
@@ -111,6 +128,7 @@ const PlcGenerator = () => {
                 </>
               ) : (
                 <div className="plc-success">
+                  {error && <div className="error-message">⚠️ {error}</div>}
                   <p>✅ Your code has been generated successfully!</p>
                   <button className="download-btn" onClick={handleDownload}>
                     Download Code
