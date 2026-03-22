@@ -1,0 +1,130 @@
+{
+  "system_name": "Conveyor Sorting System",
+  "process_description": "Belt conveyor M-201 with VFD speed control, photoelectric sensor PE-201, metal detector ID-201, pneumatic reject diverter SOL-201, jam detection.",
+  "theme": "motor",
+  "mode": "Auto",
+  "components": [
+    {
+      "id": "M201",
+      "type": "motor",
+      "label": "Conveyor Motor M-201",
+      "tag": "M-201",
+      "state": "stopped",
+      "sim": {
+        "fill_rate": 0
+      },
+      "_id": "M201"
+    },
+    {
+      "id": "PE201",
+      "type": "sensor",
+      "label": "Infeed Sensor PE-201",
+      "tag": "PE-201",
+      "value": 0,
+      "unit": "count",
+      "sim": {
+        "normal_min": 0,
+        "normal_max": 100
+      },
+      "_id": "PE201"
+    },
+    {
+      "id": "ID201",
+      "type": "sensor",
+      "label": "Metal Detector ID-201",
+      "tag": "ID-201",
+      "value": 0,
+      "unit": "count",
+      "sim": {
+        "normal_min": 0,
+        "normal_max": 20
+      },
+      "_id": "ID201"
+    },
+    {
+      "id": "SOL201",
+      "type": "valve",
+      "label": "Reject Diverter SOL-201",
+      "tag": "SOL-201",
+      "state": "closed",
+      "value": 0,
+      "_id": "SOL201"
+    },
+    {
+      "id": "CONV_SPEED",
+      "type": "slider",
+      "label": "Conveyor Speed",
+      "value": 60,
+      "unit": "%",
+      "_id": "CONV_SPEED"
+    },
+    {
+      "id": "gauge_total",
+      "type": "gauge",
+      "label": "Total Products",
+      "tag": "CNT-201",
+      "value": 0,
+      "unit": "pcs",
+      "_id": "gauge_total"
+    },
+    {
+      "id": "ALM_JAM",
+      "type": "alarm",
+      "label": "Jam Fault",
+      "tag": "ALM-JAM",
+      "state": "inactive",
+      "_id": "ALM_JAM"
+    },
+    {
+      "id": "btn_start_2",
+      "type": "button",
+      "label": "Start System",
+      "state": "inactive",
+      "tag": "PB-201",
+      "_id": "btn_start_2"
+    },
+    {
+      "id": "btn_stop_2",
+      "type": "button",
+      "label": "Stop System",
+      "state": "inactive",
+      "tag": "PB-202",
+      "_id": "btn_stop_2"
+    },
+    {
+      "id": "btn_estop_2",
+      "type": "button",
+      "label": "Emergency Stop",
+      "state": "inactive",
+      "tag": "ESTOP",
+      "_id": "btn_estop_2"
+    }
+  ],
+  "connections": [
+    {
+      "from": "M201",
+      "to": "PE201",
+      "label": "Belt",
+      "active_when": "running"
+    },
+    {
+      "from": "PE201",
+      "to": "ID201",
+      "label": "Belt",
+      "active_when": "running"
+    },
+    {
+      "from": "ID201",
+      "to": "SOL201",
+      "label": "Signal",
+      "active_when": "running"
+    }
+  ],
+  "alarms": [
+    {
+      "tag": "ALM-JAM",
+      "description": "Conveyor Jam Detected",
+      "priority": "high"
+    }
+  ]
+}

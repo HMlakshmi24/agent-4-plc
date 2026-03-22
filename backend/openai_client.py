@@ -38,21 +38,28 @@ client = OpenAI(
 )
 
 # Helper: safe chat completion with automatic retry on rate limits + fallback on network errors
-def safe_chat_completion(model: str, messages: list, temperature: float = 0.0, response_format: dict | None = None):
+def safe_chat_completion(model: str, messages: list, temperature: float = 0.0, response_format: dict | None = None, api_key: str = None, max_tokens: int = 2000):
     import socket
     import time
     
-    MAX_RETRIES = 3
-    RETRY_DELAYS = [5, 15, 30]  # seconds between retries on rate limit
+    MAX_RETRIES = 2
+    RETRY_DELAYS = [2, 5]  # seconds between retries on rate limit
     
+    current_client = client
+    if api_key:
+        from openai import OpenAI
+        current_client = OpenAI(api_key=api_key, base_url="https://api.openai.com/v1")
+        if "gpt" not in model:
+            model = "gpt-4o-mini"
+            
     for attempt in range(MAX_RETRIES):
         try:
-            kwargs = {"model": model, "messages": messages, "temperature": temperature}
+            kwargs = {"model": model, "messages": messages, "temperature": temperature, "max_tokens": max_tokens}
             if response_format is not None:
                 kwargs["response_format"] = response_format
             
-            socket.setdefaulttimeout(60)
-            return client.chat.completions.create(**kwargs)
+            socket.setdefaulttimeout(30)
+            return current_client.chat.completions.create(**kwargs)
             
         except Exception as e:
             err_str = str(e).lower()
@@ -106,9 +113,13 @@ STRICT RULES:
 - Never assign Timer.Q or Timer.ET.
 """
 
-def generate_logic(description: str, language: str = "ST") -> str:
+def generate_logic(description: str, language: str = "ST") -> tuple[str, int]:
+    """
+    Returns (content: str, tokens_used: int) from AI response.usage.total_tokens.
+    Never estimates — always uses the real count from the API response.
+    """
     model = DEFAULT_MODEL
-    
+
     prompt = f"""
 Generate {language} logic only.
 
@@ -118,7 +129,7 @@ System:
 Do not create PROGRAM or VAR blocks.
 Write ONLY the logic body.
 """
-    
+
     try:
         response = safe_chat_completion(
             model=model,
@@ -128,14 +139,18 @@ Write ONLY the logic body.
             ],
             temperature=0.1
         )
-        return response.choices[0].message.content
+        content = response.choices[0].message.content
+        tokens  = getattr(getattr(response, "usage", None), "total_tokens", 0) or 0
+        return content, tokens
     except Exception as e:
         print(f"LLM Generation Error: {e}")
-        return f"(* Error generating logic: {str(e)} *)"
+        return f"(* Error generating logic: {str(e)} *)", 0
 
-def generate_hmi_layout(system_prompt: str, user_prompt: str):
+
+def generate_hmi_layout(system_prompt: str, user_prompt: str, api_key: str = None) -> tuple[str, int]:
     """
-    Generates HMI layout using JSON mode (Strict V3 Engine).
+    Generates HMI layout JSON.
+    Returns (content: str, tokens_used: int).
     """
     model = DEFAULT_MODEL
 
@@ -149,11 +164,13 @@ def generate_hmi_layout(system_prompt: str, user_prompt: str):
             model=model,
             messages=messages,
             temperature=0,
-            response_format={"type": "json_object"}
+            response_format={"type": "json_object"},
+            api_key=api_key
         )
         content = response.choices[0].message.content
         if not content:
             raise ValueError("LLM returned empty response")
-        return content
+        tokens = getattr(getattr(response, "usage", None), "total_tokens", 0) or 0
+        return content, tokens
     except Exception:
         raise

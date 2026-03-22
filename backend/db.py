@@ -35,7 +35,7 @@ async def init_db():
         [("email", ASCENDING)],
         unique=True
     )
-    print("✅ MongoDB initialized with unique email index.")
+    print("[OK] MongoDB initialized with unique email index.")
 
 
 # ------------------------------------------------------------------

@@ -12,6 +12,10 @@ def validate_layout(raw_json):
         except:
             raise ValueError("Invalid JSON from AI")
 
+    # ── Check for HTML based schema ──────────────────────────────
+    if "html" in data and "view_mode" in data:
+        return data
+
     # Handling legacy nesting if model hallucinates it, but user wants strict.
     # User said "NOT nested".
     # I will stick to what user requested: Flat structure.
@@ -26,7 +30,7 @@ def validate_layout(raw_json):
              raise ValueError("Invalid style value")
 
     if not isinstance(data.get("components"), list):
-        raise ValueError("components must be list")
+        raise ValueError("components or html must be present")
 
     if len(data["components"]) < 1:
         raise ValueError("No components returned")

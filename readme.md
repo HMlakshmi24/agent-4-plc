@@ -2,33 +2,111 @@
 
 ## Local Setup (Running Offline)
 
-Steps to run the system locally on a new PC:
+Steps to run the system locally on a new PC.
 
-1. Open a terminal in the project folder.
-2. Install dependencies:
+### Backend Commands (Windows / PowerShell)
+1. Open a terminal in the project root.
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv310
+   venv310\Scripts\activate
+   ```
+3. Install backend dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-3. Setup Environment Variables:
-   Create a `backend/.env` file with the following keys:
-   ```env
-   # 1. MongoDB Connection (Required)
-   MONGO_URI=mongodb+srv://<username>:<password>@<cluster-url>/?retryWrites=true&w=majority
-   
-   # 2. OpenAI API Key (Required)
-   OPENAI_API_KEY=sk-proj-YOUR_ACTUAL_KEY
-   
-   # 3. Optional: Host and Port
-   PORT=8000
-   HOST=0.0.0.0
-   ```
-4. Start the backend server:
+4. Create environment file:
    ```bash
-   uvicorn backend.main:app --reload
+   notepad backend\.env
    ```
-5. Open the API docs:
+   Example contents:
+   ```env
+   MONGO_URI=mongodb+srv://<username>:<password>@<cluster-url>/?retryWrites=true&w=majority
+   OPENAI_API_KEY=sk-proj-YOUR_ACTUAL_KEY
+   ```
+5. Run the backend API:
+   ```bash
+   python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+   ```
+6. Open API docs:
+   ```
    http://127.0.0.1:8000/docs
-6. Use the `/offline/generate` endpoint for generation.
+   ```
+
+### Backend Commands (macOS/Linux)
+1. Open a terminal in the project root.
+2. Create and activate a virtual environment:
+   ```bash
+   python3 -m venv venv310
+   source venv310/bin/activate
+   ```
+3. Install backend dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Create environment file:
+   ```bash
+   cat > backend/.env << 'EOF'
+   MONGO_URI=mongodb+srv://<username>:<password>@<cluster-url>/?retryWrites=true&w=majority
+   OPENAI_API_KEY=sk-proj-YOUR_ACTUAL_KEY
+   EOF
+   ```
+5. Run the backend API:
+   ```bash
+   python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+   ```
+6. Open API docs:
+   ```
+   http://127.0.0.1:8000/docs
+   ```
+
+### Frontend Commands (Windows / PowerShell)
+1. Open a new terminal in the `frontend` folder:
+   ```bash
+   cd frontend
+   ```
+2. Install frontend dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the Vite development server:
+   ```bash
+   npm run dev
+   ```
+4. Open the app:
+   ```
+   http://localhost:5173
+   ```
+
+### Frontend Commands (macOS/Linux)
+1. Open a new terminal in the `frontend` folder:
+   ```bash
+   cd frontend
+   ```
+2. Install frontend dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the Vite development server:
+   ```bash
+   npm run dev
+   ```
+4. Open the app:
+   ```
+   http://localhost:5173
+   ```
+
+### Optional Dev Commands
+Run backend without auto-reload:
+```bash
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+```
+
+If you see port conflicts:
+```bash
+netstat -ano | findstr :8000
+taskkill /PID <PID> /F
+```
 
 ---
 
@@ -71,10 +149,10 @@ Since the backend is a Python (FastAPI/Bottle) server, **Render** is the best ch
 2. Log into [Render.com](https://render.com) and create a new **Web Service**.
 3. Connect your GitHub repository.
 4. **Configuration Settings**:
-   - **Root Directory:** `backend` (Important!)
+   - **Root Directory:** leave blank (use the root of the repository)
    - **Environment:** `Python 3`
-   - **Build Command:** `pip install -r ../requirements.txt`
-   - **Start Command:** `uvicorn run_backend:app --host 0.0.0.0 --port $PORT` (Adjust based on your actual main entry file).
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
 5. **Environment Variables**:
    Under the "Environment" section in Render, add:
    - `MONGO_URI` = `mongodb+srv://...`

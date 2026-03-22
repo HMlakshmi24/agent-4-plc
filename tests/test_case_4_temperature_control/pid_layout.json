@@ -1,0 +1,174 @@
+{
+  "system_name": "Reactor Temperature Control - RX-401",
+  "revision": "A",
+  "project": "Batch Reactor Control",
+  "drawn_by": "AutoMind AI",
+  "date": "2026-01-01",
+  "equipment": [
+    {
+      "id": "E1",
+      "type": "reactor",
+      "label": "Reactor RX-401",
+      "service": "Batch",
+      "x": 300,
+      "y": 200,
+      "width": 150,
+      "height": 250
+    },
+    {
+      "id": "E2",
+      "type": "heater",
+      "label": "Heater HE-401",
+      "service": "Jacket Heating",
+      "x": 300,
+      "y": 460,
+      "width": 100,
+      "height": 50
+    },
+    {
+      "id": "E3",
+      "type": "valve",
+      "label": "Cooling Valve XV-401",
+      "service": "Jacket Cooling",
+      "x": 450,
+      "y": 460,
+      "width": 50,
+      "height": 50
+    },
+    {
+      "id": "E4",
+      "type": "motor",
+      "label": "Agitator Motor M-401",
+      "service": "Agitation",
+      "x": 300,
+      "y": 150,
+      "width": 50,
+      "height": 50
+    }
+  ],
+  "instruments": [
+    {
+      "id": "I1",
+      "tag": "TT-401",
+      "type": "TT",
+      "service": "Process Temperature",
+      "x": 500,
+      "y": 200,
+      "connected_to": "E1",
+      "setpoint": null,
+      "hi_alarm": 180,
+      "lo_alarm": null,
+      "value": 150,
+      "unit": "°C",
+      "loop": "401"
+    },
+    {
+      "id": "I2",
+      "tag": "TT-402",
+      "type": "TT",
+      "service": "Jacket Temperature",
+      "x": 500,
+      "y": 300,
+      "connected_to": "E2",
+      "setpoint": null,
+      "hi_alarm": 180,
+      "lo_alarm": null,
+      "value": 160,
+      "unit": "°C",
+      "loop": "402"
+    },
+    {
+      "id": "I3",
+      "tag": "PT-401",
+      "type": "PT",
+      "service": "Pressure",
+      "x": 500,
+      "y": 400,
+      "connected_to": "E1",
+      "setpoint": null,
+      "hi_alarm": null,
+      "lo_alarm": null,
+      "value": 6,
+      "unit": "barg",
+      "loop": "403"
+    },
+    {
+      "id": "I4",
+      "tag": "TSH-401",
+      "type": "TS",
+      "service": "High Temperature Switch",
+      "x": 600,
+      "y": 200,
+      "connected_to": "E1",
+      "setpoint": 160,
+      "hi_alarm": null,
+      "lo_alarm": null,
+      "value": null,
+      "unit": "°C",
+      "loop": "404"
+    },
+    {
+      "id": "I5",
+      "tag": "TSHH-401",
+      "type": "TS",
+      "service": "High-High Temperature Trip",
+      "x": 600,
+      "y": 300,
+      "connected_to": "E1",
+      "setpoint": 180,
+      "hi_alarm": null,
+      "lo_alarm": null,
+      "value": null,
+      "unit": "°C",
+      "loop": "405"
+    }
+  ],
+  "pipes": [
+    {
+      "id": "P1",
+      "from": "E1",
+      "to": "E2",
+      "path": [
+        [
+          350,
+          250
+        ],
+        [
+          350,
+          460
+        ]
+      ],
+      "service": "Heating",
+      "size": "2\"",
+      "active": true
+    },
+    {
+      "id": "P2",
+      "from": "E2",
+      "to": "E3",
+      "path": [
+        [
+          400,
+          460
+        ],
+        [
+          450,
+          460
+        ]
+      ],
+      "service": "Cooling",
+      "size": "2\"",
+      "active": true
+    }
+  ],
+  "control_loops": [
+    {
+      "id": "LC1",
+      "controller": "TIC-401",
+      "controlled_variable": "RX-401 Temperature",
+      "manipulated_variable": "HE-401 Power",
+      "setpoint": 200,
+      "mode": "Auto"
+    }
+  ]
+}

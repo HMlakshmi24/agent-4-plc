@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "name": "Conveyor Belt with Part Sorting",
+    "domain": "conveyor",
+    "program_name": "ConveyorSort",
+    "brand": "SIEMENS",
+    "description": "Conveyor sorting system with three output lanes. Parts detected by I_PartSensor trigger a counter. When M_PartCount reaches 50, divert parts to Lane 2 via Q_DivertValve. Emergency stop I_EStop. Jam detection via I_JamSensor forces Fault state. Program: ConveyorSort"
+  },
+  {
+    "id": 2,
+    "name": "Pump Protection with Overload Latching",
+    "domain": "pump",
+    "program_name": "PumpProtect",
+    "brand": "SIEMENS",
+    "description": "Centrifugal pump P-101 starts on I_Start, stops on I_Stop or I_Overload. If I_Overload trips more than 3 times, latch in Fault state. Manual reset via I_Reset. Timer T_StartDelay = 3 seconds before motor energised. Program: PumpProtect"
+  },
+  {
+    "id": 3,
+    "name": "Dual Tank Sequential Fill",
+    "domain": "tank",
+    "program_name": "DualTankFill",
+    "brand": "CODESYS",
+    "description": "Fill Tank A first via Q_ValveA until I_LevelHighA, then close Q_ValveA and open Q_ValveB to fill Tank B until I_LevelHighB. Overflow on either tank triggers I_OverflowA or I_OverflowB which forces Fault. E-Stop I_EStop highest priority. Program: DualTankFill"
+  },
+  {
+    "id": 4,
+    "name": "Star-Delta Motor Starter",
+    "domain": "motor",
+    "program_name": "StarDeltaStart",
+    "brand": "SIEMENS",
+    "description": "Motor starter with star-delta switching. On I_Start, energise Q_StarContactor for T_StarDelay (5 seconds), then switch to Q_DeltaContactor. Thermal overload I_ThermalOverload and E-Stop I_EStop both force Fault state with Q_Alarm. Program: StarDeltaStart"
+  },
+  {
+    "id": 5,
+    "name": "Heater Zone Temperature Control",
+    "domain": "heater",
+    "program_name": "HeaterZone",
+    "brand": "SIEMENS",
+    "description": "Heater zone control. Q_Heater energised when running. High temperature alarm I_TempHigh forces Fault state and de-energises Q_Heater. Thermal fault I_ThermalFault also triggers Fault. Startup delay T_PreHeat = 5 seconds. Manual reset I_Reset. Program: HeaterZone"
+  },
+  {
+    "id": 6,
+    "name": "HVAC Multi-Zone Fan Control",
+    "domain": "hvac",
+    "program_name": "HVACZoneCtrl",
+    "brand": "CODESYS",
+    "description": "HVAC fan control for three zones. Fan Q_Fan runs when system is started. High temperature I_TempHigh or filter fault I_FilterFault triggers Fault state and stops Q_Fan. Status light Q_StatusRun indicates running. Alarm Q_Alarm on any fault. E-Stop I_EStop mandatory. Program: HVACZoneCtrl"
+  },
+  {
+    "id": 7,
+    "name": "Chemical Dosing with Interlock",
+    "domain": "dosing",
+    "program_name": "ChemDosing",
+    "brand": "SIEMENS",
+    "description": "Chemical dosing pump Q_DosePump only runs when I_AgitatorRunning feedback is TRUE and I_SafetyValveOpen is TRUE. Dose timer T_DoseTime = 30 seconds. If interlock drops during dosing, immediate stop and Fault state. Counter M_DoseCount tracks number of doses. E-Stop I_EStop halts all. Program: ChemDosing"
+  },
+  {
+    "id": 8,
+    "name": "Batch Reactor Sequence",
+    "domain": "reactor",
+    "program_name": "BatchReactor",
+    "brand": "CODESYS",
+    "description": "Batch reactor with 4 sequence steps: Fill via Q_InletValve until I_LevelHigh, Heat via Q_Heater until I_TempHigh, Mix via Q_AgitatorMotor for T_MixTime (600 seconds), Drain via Q_DrainValve until I_LevelLow. E-Stop I_EStop halts sequence at any step and forces Fault. Program: BatchReactor"
+  },
+  {
+    "id": 9,
+    "name": "Packaging Machine Counter",
+    "domain": "packaging",
+    "program_name": "PackagingCtrl",
+    "brand": "SIEMENS",
+    "description": "Packaging line conveyor Q_PackMotor runs and counts products via I_PartSensor rising edge. Batch size target 24 units. When M_BatchCount reaches 24, pulse Q_BatchReady for 2 seconds then reset counter. Reject sensor I_RejectSensor increments M_RejectCount. Jam I_JamSensor stops machine. Program: PackagingCtrl"
+  },
+  {
+    "id": 10,
+    "name": "Mixing Tank with Level and Temperature",
+    "domain": "mixing",
+    "program_name": "MixTankCtrl",
+    "brand": "SIEMENS",
+    "description": "Mixing tank control. Inlet valve Q_InletValve fills tank when I_LevelLow is active. Agitator Q_MixerMotor starts when I_LevelHigh reached. Temperature sensor I_TempHigh triggers heater cutoff. Outlet valve Q_OutletValve opens on I_Start after mixing complete T_MixDelay = 120 seconds. E-Stop I_EStop mandatory. Program: MixTankCtrl"
+  }
+]

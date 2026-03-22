@@ -1,0 +1,9 @@
+To run the application, open two separate terminal windows in the root project folder (agent-4-plc):
+
+Terminal 1 (Backend):
+cd backend
+python main.py
+
+Terminal 2 (Frontend):
+cd frontend
+npm run dev

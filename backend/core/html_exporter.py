@@ -27,10 +27,11 @@ h2 {{ border-bottom: 1px solid #334155; padding-bottom: 10px; }}
 """
 
     for comp in layout.get("components", []):
+        label = comp.get('label') or comp.get('name') or 'Unknown'
         html += f"""
 <div class="component"
 style="left:{comp.get('x',0)}px; top:{comp.get('y',0)}px;">
-<strong>{comp.get('name', 'Unknown')}</strong>
+<strong>{label}</strong>
 <span>{comp.get('type', 'generic')}</span>
 </div>
 """

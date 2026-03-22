@@ -1,0 +1,121 @@
+{
+  "system_name": "Tank Filling System",
+  "process_description": "Single-tank automated filling with a centrifugal pump (P-101), level transmitter LT-101 (0-100%), motorised inlet valve XV-101, high alarm at 95%, stop pump at 90%, start pump at 20%.",
+  "theme": "water",
+  "mode": "Auto",
+  "components": [
+    {
+      "id": "TK101",
+      "type": "tank",
+      "label": "Storage Tank TK-101",
+      "tag": "TK-101",
+      "value": 45.0,
+      "unit": "%",
+      "sim": {
+        "fill_rate": 30,
+        "drain_rate": 5,
+        "capacity": 10000,
+        "hi_alarm": 95,
+        "lo_alarm": 20,
+        "hi_hi_alarm": 98,
+        "lo_lo_alarm": 10,
+        "normal_min": 20,
+        "normal_max": 90
+      },
+      "_id": "TK101"
+    },
+    {
+      "id": "P101",
+      "type": "pump",
+      "label": "Fill Pump P-101",
+      "tag": "P-101",
+      "state": "stopped",
+      "sim": {
+        "fill_rate": 30
+      },
+      "_id": "P101"
+    },
+    {
+      "id": "XV101",
+      "type": "valve",
+      "label": "Inlet Valve XV-101",
+      "tag": "XV-101",
+      "state": "closed",
+      "value": 0,
+      "_id": "XV101"
+    },
+    {
+      "id": "LT101",
+      "type": "sensor_level",
+      "label": "Level Transmitter LT-101",
+      "tag": "LT-101",
+      "value": 45.0,
+      "unit": "%",
+      "sim": {
+        "hi_alarm": 95,
+        "lo_alarm": 20,
+        "normal_min": 20,
+        "normal_max": 90
+      },
+      "_id": "LT101"
+    },
+    {
+      "id": "SP_FILL",
+      "type": "slider",
+      "label": "Fill Setpoint",
+      "value": 90,
+      "unit": "%",
+      "_id": "SP_FILL"
+    },
+    {
+      "id": "btn_start_1",
+      "type": "button",
+      "label": "Start System",
+      "state": "inactive",
+      "tag": "PB-101",
+      "_id": "btn_start_1"
+    },
+    {
+      "id": "btn_stop_1",
+      "type": "button",
+      "label": "Stop System",
+      "state": "inactive",
+      "tag": "PB-102",
+      "_id": "btn_stop_1"
+    },
+    {
+      "id": "btn_estop_1",
+      "type": "button",
+      "label": "Emergency Stop",
+      "state": "inactive",
+      "tag": "ESTOP",
+      "_id": "btn_estop_1"
+    }
+  ],
+  "connections": [
+    {
+      "from": "P101",
+      "to": "XV101",
+      "label": "Pump Discharge",
+      "active_when": "running"
+    },
+    {
+      "from": "XV101",
+      "to": "TK101",
+      "label": "Inlet",
+      "active_when": "open"
+    }
+  ],
+  "alarms": [
+    {
+      "tag": "ALM-HI",
+      "description": "Tank High Level 95%",
+      "priority": "high"
+    },
+    {
+      "tag": "ALM-LO",
+      "description": "Tank Low Level 20%",
+      "priority": "low"
+    }
+  ]
+}

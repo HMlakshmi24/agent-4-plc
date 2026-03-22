@@ -1,0 +1,156 @@
+{
+  "system_name": "Temperature Control System",
+  "process_description": "Batch reactor RX-401 temperature PID control: heater HE-401 (15kW SCR), cooling valve XV-401, thermocouples TT-401/TT-402, alarms at 160 and 180 deg C.",
+  "theme": "chemical",
+  "mode": "Auto",
+  "components": [
+    {
+      "id": "RX401",
+      "type": "tank",
+      "label": "Reactor RX-401",
+      "tag": "RX-401",
+      "value": 25.0,
+      "unit": "%",
+      "sim": {
+        "capacity": 500,
+        "hi_alarm": 95,
+        "lo_alarm": 10,
+        "normal_min": 10,
+        "normal_max": 95
+      },
+      "_id": "RX401"
+    },
+    {
+      "id": "HE401",
+      "type": "motor",
+      "label": "Heater HE-401",
+      "tag": "HE-401",
+      "state": "stopped",
+      "sim": {
+        "fill_rate": 0
+      },
+      "_id": "HE401"
+    },
+    {
+      "id": "XV401",
+      "type": "valve",
+      "label": "Cooling Valve XV-401",
+      "tag": "XV-401",
+      "state": "closed",
+      "value": 0,
+      "_id": "XV401"
+    },
+    {
+      "id": "TT401",
+      "type": "sensor_temp",
+      "label": "Process Temp TT-401",
+      "tag": "TT-401",
+      "value": 22.5,
+      "unit": "degC",
+      "sim": {
+        "hi_alarm": 160,
+        "lo_alarm": 0,
+        "normal_min": 20,
+        "normal_max": 120
+      },
+      "_id": "TT401"
+    },
+    {
+      "id": "TT402",
+      "type": "sensor_temp",
+      "label": "Jacket Temp TT-402",
+      "tag": "TT-402",
+      "value": 21.0,
+      "unit": "degC",
+      "sim": {
+        "hi_alarm": 170,
+        "normal_min": 20,
+        "normal_max": 130
+      },
+      "_id": "TT402"
+    },
+    {
+      "id": "SP_TEMP",
+      "type": "slider",
+      "label": "Temperature Setpoint",
+      "value": 80,
+      "unit": "degC",
+      "_id": "SP_TEMP"
+    },
+    {
+      "id": "ALM_HT",
+      "type": "alarm",
+      "label": "High Temp 160 degC",
+      "tag": "ALM-HT",
+      "state": "inactive",
+      "_id": "ALM_HT"
+    },
+    {
+      "id": "ALM_HHT",
+      "type": "alarm",
+      "label": "High-High Temp 180 degC",
+      "tag": "ALM-HHT",
+      "state": "inactive",
+      "_id": "ALM_HHT"
+    },
+    {
+      "id": "gauge_pwr",
+      "type": "gauge",
+      "label": "Heater Power",
+      "tag": "HE-401",
+      "value": 0,
+      "unit": "%",
+      "_id": "gauge_pwr"
+    },
+    {
+      "id": "btn_start_4",
+      "type": "button",
+      "label": "Start System",
+      "state": "inactive",
+      "tag": "PB-401",
+      "_id": "btn_start_4"
+    },
+    {
+      "id": "btn_stop_4",
+      "type": "button",
+      "label": "Stop System",
+      "state": "inactive",
+      "tag": "PB-402",
+      "_id": "btn_stop_4"
+    },
+    {
+      "id": "btn_estop_4",
+      "type": "button",
+      "label": "Emergency Stop",
+      "state": "inactive",
+      "tag": "ESTOP",
+      "_id": "btn_estop_4"
+    }
+  ],
+  "connections": [
+    {
+      "from": "HE401",
+      "to": "RX401",
+      "label": "Heat",
+      "active_when": "running"
+    },
+    {
+      "from": "XV401",
+      "to": "RX401",
+      "label": "Cooling",
+      "active_when": "open"
+    }
+  ],
+  "alarms": [
+    {
+      "tag": "ALM-HT",
+      "description": "High Temperature 160 degC",
+      "priority": "high"
+    },
+    {
+      "tag": "ALM-HHT",
+      "description": "High-High Temperature 180 degC",
+      "priority": "critical"
+    }
+  ]
+}

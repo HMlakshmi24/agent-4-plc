@@ -17,13 +17,15 @@ class IndustrialIECValidator:
         if "END_PROGRAM" not in U:
             errors.append("Missing END_PROGRAM")
 
-        # Rule 3: Only one PROGRAM (excluding END_PROGRAM counts)
-        prog_count = U.count("PROGRAM")
-        end_prog_count = U.count("END_PROGRAM")
-        # Since END_PROGRAM contains the substring "PROGRAM", the raw count of "PROGRAM" includes it.
-        # True PROGRAM count = Raw "PROGRAM" count - "END_PROGRAM" count
-        true_prog_starts = prog_count - end_prog_count
-        
+        # Rule 3: Only one PROGRAM — use start-of-line anchor so comments like
+        # "// Main program loop" or "// PROGRAM description" don't produce false positives
+        code_no_comments = re.sub(r'//[^\n]*', '', code)
+        code_no_comments = re.sub(r'\(\*.*?\*\)', '', code_no_comments, flags=re.DOTALL)
+        U_no_comments = code_no_comments.upper()
+        # Match "PROGRAM <name>" only at start of (possibly indented) line
+        prog_decls = re.findall(r'^\s*PROGRAM\s+\w+', U_no_comments, re.MULTILINE)
+        true_prog_starts = len(prog_decls)
+
         if true_prog_starts > 1:
             errors.append("Multiple PROGRAM blocks")
 
@@ -31,9 +33,11 @@ class IndustrialIECValidator:
         if "VAR" not in U:
             errors.append("Missing VAR section")
 
-        # Rule 5: Too many VAR sections
-        var_sections = len(re.findall(r'\bVAR\b|\bVAR_INPUT\b|\bVAR_OUTPUT\b', U))
-        if var_sections > 3:
+        # Rule 5: Too many VAR sections (count inside PROGRAM only, using comment-stripped code)
+        prog_match = re.search(r'^\s*PROGRAM\s+\w+\b(.*?)\bEND_PROGRAM\b', U_no_comments, re.DOTALL | re.MULTILINE)
+        prog_body = prog_match.group(1) if prog_match else U_no_comments
+        var_sections = len(re.findall(r'\bVAR\b|\bVAR_INPUT\b|\bVAR_OUTPUT\b', prog_body))
+        if var_sections > 6:
             errors.append("Too many VAR sections")
 
         # Rule 6: Illegal keyword
@@ -60,12 +64,16 @@ class IndustrialIECValidator:
         if code.count("(") != code.count(")"):
             errors.append("Unbalanced parentheses")
 
-        # Rule 12: No output reset
+        # Rule 12: No output reset (warn only if outputs aren't initialized)
         if "OUTPUT RESET" not in U:
-            warnings.append("No output reset section")
+            output_block = re.search(r"VAR_OUTPUT(.*?)END_VAR", code, re.S | re.I)
+            if output_block:
+                if not re.search(r":=\s*(FALSE|0)", output_block.group(1), re.I):
+                    warnings.append("No output reset section")
 
-        # Rule 13: BOOL without default
-        if re.search(r':\s*BOOL;', code) and ":= FALSE" not in code:
+        # Rule 13: BOOL outputs without default initialization
+        output_block = re.search(r"VAR_OUTPUT(.*?)END_VAR", code, re.S | re.I)
+        if output_block and re.search(r':\s*BOOL;', output_block.group(1)) and not re.search(r":=\s*FALSE", output_block.group(1), re.I):
             warnings.append("BOOL outputs not initialized")
 
         # Rule 14: Multiple END_VAR missing
@@ -88,8 +96,8 @@ class IndustrialIECValidator:
         # Using a simple string check is too aggressive.
         pass
 
-        # Rule 19: Duplicate output reset
-        if U.count(":= FALSE") > 10:
+        # Rule 19: Duplicate output reset (only if explicit reset section exists)
+        if "OUTPUT RESET" in U and U.count(":= FALSE") > 10:
             warnings.append("Possible duplicate resets")
 
         # Rule 20: Undeclared variables (basic check)
@@ -104,10 +112,8 @@ class IndustrialIECValidator:
         if "TIMER" in U and "TON" not in U:
             warnings.append("Timer mentioned but not used")
 
-        # Rule 23: Assignment outside logic
-        if "VAR" in U and ":=" in U and "CASE" not in U:
-            # This logic is a bit loose, relying on CASE existing to define logic block
-            # But adhering to user spec
+        # Rule 23: Assignment outside logic (only warn if no logic present)
+        if "VAR" in U and ":=" in U and "CASE" not in U and "IF" not in U:
             warnings.append("Assignments outside logic")
 
         # Rule 24: Mixed languages

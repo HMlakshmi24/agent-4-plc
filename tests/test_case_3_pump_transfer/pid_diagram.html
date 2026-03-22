@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pump Transfer System - P-301 — P&amp;ID</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#060d1a;color:#e2e8f0;
+  height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* HEADER */
+.hdr{background:linear-gradient(90deg,#0a1628,#0d1f35);border-bottom:2px solid #0ea5e9;
+  padding:10px 24px;display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;box-shadow:0 4px 20px rgba(0,0,0,.6);}
+.hdr-title{font-size:16px;font-weight:700;color:#0ea5e9;letter-spacing:1.5px;text-transform:uppercase;}
+.hdr-right{display:flex;gap:16px;align-items:center;}
+.hdr-clock{font-size:12px;color:#64748b;font-family:monospace;}
+.online-badge{display:flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);
+  border:1px solid rgba(34,197,94,.3);border-radius:20px;padding:4px 10px;}
+.online-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;
+  animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 4px #22c55e;}50%{box-shadow:0 0 14px #22c55e;}}
+
+/* LAYOUT */
+.body-wrap{display:flex;flex:1;overflow:hidden;}
+.pid-area{flex:1;background:#050c17;overflow:auto;position:relative;}
+
+/* SVG CANVAS */
+#pidSvg{width:100%;min-height:750px;cursor:default;}
+#pidSvg .equipment-g{cursor:pointer;}
+#pidSvg .equipment-g:hover rect,
+#pidSvg .equipment-g:hover circle,
+#pidSvg .equipment-g:hover ellipse{
+  stroke:#0ea5e9!important;filter:drop-shadow(0 0 8px rgba(14,165,233,0.6));
+}
+#pidSvg .instrument-g{cursor:pointer;}
+#pidSvg .instrument-g:hover circle{stroke:#22c55e!important;}
+
+/* PIPE ANIMATION */
+.pipe-active{stroke:#22c55e;stroke-dasharray:16 6;
+  animation:flow 1.5s linear infinite;filter:url(#glow);}
+@keyframes flow{to{stroke-dashoffset:-22;}}
+.pipe-process{stroke:#334155;}
+
+/* SPINNING IMPELLER */
+@keyframes spin{to{transform:rotate(360deg);}}
+.spinning{animation:spin 1.2s linear infinite;}
+
+/* RIGHT PANEL */
+.ctrl-area{width:280px;flex-shrink:0;background:#080f1e;
+  border-left:2px solid #0f2744;display:flex;flex-direction:column;overflow-y:auto;}
+.ctrl-section{border-bottom:1px solid #0f2040;padding:14px 16px;}
+.ctrl-title{font-size:10px;font-weight:700;color:#475569;
+  text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;}
+.info-card{background:#0a1628;border-radius:6px;border:1px solid #0f2744;
+  padding:10px;margin-bottom:8px;}
+.info-id{font-size:12px;font-weight:700;color:#0ea5e9;font-family:monospace;}
+.info-svc{font-size:10px;color:#64748b;margin-top:3px;}
+.info-val{font-size:14px;font-weight:700;color:#22c55e;font-family:monospace;margin-top:4px;}
+.main-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.ctrl-btn{padding:9px 12px;border:none;border-radius:7px;font-size:11px;font-weight:700;
+  cursor:pointer;transition:all .2s;}
+.btn-start{background:#22c55e;color:#fff;flex:1;}
+.btn-start:hover{background:#16a34a;box-shadow:0 0 14px rgba(34,197,94,.4);}
+.btn-stop{background:#ef4444;color:#fff;flex:1;}
+.btn-stop:hover{background:#dc2626;box-shadow:0 0 14px rgba(239,68,68,.4);}
+.sys-dot{width:10px;height:10px;border-radius:50%;background:#334155;
+  display:inline-block;transition:all .3s;margin-right:8px;}
+.sys-dot.running{background:#22c55e;box-shadow:0 0 10px #22c55e;}
+.status-row{display:flex;align-items:center;margin-top:10px;}
+.status-txt{font-size:12px;font-weight:700;color:#64748b;}
+.status-txt.running{color:#22c55e;}
+.event-log{background:#050c17;border-radius:5px;border:1px solid #0f2040;
+  max-height:160px;overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:3px;}
+.ev-item{font-size:9px;padding:3px 7px;border-radius:3px;border-left:3px solid;}
+.ev-info{background:rgba(14,165,233,.08);border-color:#0ea5e9;color:#7dd3fc;}
+.ev-ok{background:rgba(34,197,94,.08);border-color:#22c55e;color:#86efac;}
+.ev-warn{background:rgba(245,158,11,.08);border-color:#f59e0b;color:#fcd34d;}
+.ev-crit{background:rgba(239,68,68,.1);border-color:#ef4444;color:#fca5a5;}
+.legend-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:10px;}
+.legend-line{width:24px;height:3px;background:#334155;}
+.legend-line.active{background:#22c55e;}
+.legend-line.dashed{background:none;border-top:2px dashed #475569;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:rgba(14,165,233,.3);border-radius:10px;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-title">&#9670; Pump Transfer System - P-301 — P&amp;ID</div>
+  <div class="hdr-right">
+    <div class="online-badge">
+      <div class="online-dot"></div>
+      <span style="font-size:10px;color:#22c55e;font-weight:700">LIVE</span>
+    </div>
+    <span class="hdr-clock" id="hdrClock">--:--:--</span>
+  </div>
+</div>
+
+<div class="body-wrap">
+
+  <!-- P&ID SVG Canvas -->
+  <div class="pid-area">
+    <svg id="pidSvg" viewBox="0 0 1100 750" preserveAspectRatio="xMidYMid meet">
+      
+<defs>
+  <!-- Arrow marker for pipe flow direction -->
+  <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+    <polygon points="0,0 8,3 0,6" fill="#64748b"/>
+  </marker>
+  <marker id="arrow-active" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+    <polygon points="0,0 8,3 0,6" fill="#22c55e"/>
+  </marker>
+  <!-- Crosshatch pattern for vessels under pressure -->
+  <pattern id="hatch" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="#1e3a5f" stroke-width="1"/>
+  </pattern>
+  <!-- Gradient for tanks -->
+  <linearGradient id="tankGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1"/>
+    <stop offset="50%" style="stop-color:#1e293b;stop-opacity:1"/>
+    <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1"/>
+  </linearGradient>
+  <!-- Flow animation -->
+  <filter id="glow">
+    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+    <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs>
+      <!-- Grid (engineering drawing style) -->
+      <rect x="0" y="0" width="1100" height="750" fill="#050c17"/>
+      <!-- Border -->
+      <rect x="10" y="10" width="1080" height="730" fill="none" stroke="#0f2744" stroke-width="2"/>
+      <!-- Inner border -->
+      <rect x="15" y="15" width="1070" height="720" fill="none" stroke="#0f2040" stroke-width="0.5"/>
+
+      
+  <g id="pipe-P1" class="pipe-g" data-id="P1" data-state="inactive">
+    <title>P1: Process (2")</title>
+    <polyline points="320,240 400,240" fill="none" stroke="#334155" stroke-width="3"
+              stroke-linecap="square"  class="pipe-process" id="pline-P1"
+              marker-end="url(#arrow)"/>
+    <!-- size label -->
+    <text x="400" y="232" text-anchor="middle" fill="#475569"
+          font-size="9" font-family="monospace" class="pipe-label">2"</text>
+  </g>
+  <g id="pipe-P2" class="pipe-g" data-id="P2" data-state="inactive">
+    <title>P2: Process (2")</title>
+    <polyline points="480,240 600,240" fill="none" stroke="#334155" stroke-width="3"
+              stroke-linecap="square"  class="pipe-process" id="pline-P2"
+              marker-end="url(#arrow)"/>
+    <!-- size label -->
+    <text x="600" y="232" text-anchor="middle" fill="#475569"
+          font-size="9" font-family="monospace" class="pipe-label">2"</text>
+  </g>
+  <g id="eq-E1" class="equipment-g" data-id="E1" data-type="vertical_tank"
+     onclick="selectEquipment('E1')">
+    <title>E1: Tank TK-301\nSource Storage</title>
+    <!-- tank body -->
+    <rect x="200" y="150" width="120" height="180" rx="3"
+          fill="url(#tankGrad)" stroke="#334155" stroke-width="2"/>
+    <!-- top head (elliptical) -->
+    <ellipse cx="260" cy="150" rx="60" ry="14"
+             fill="#1e293b" stroke="#334155" stroke-width="2"/>
+    <!-- bottom head -->
+    <ellipse cx="260" cy="330" rx="60" ry="14"
+             fill="#1e293b" stroke="#334155" stroke-width="2"/>
+    <!-- liquid level indicator (animated) -->
+    <rect id="liq-eq-E1" x="203" y="240" width="114" height="88"
+          fill="#0ea5e9" opacity="0.3" class="tank-liquid"/>
+    <!-- nozzle top -->
+    <line x1="260" y1="136" x2="260" y2="121"
+          stroke="#475569" stroke-width="4"/>
+    <!-- nozzle bottom -->
+    <line x1="260" y1="344" x2="260" y2="359"
+          stroke="#475569" stroke-width="4"/>
+    <!-- equipment tag bubble -->
+    <rect x="200" y="360" width="120" height="18" rx="3"
+          fill="#0f2744" stroke="#334155" stroke-width="1"/>
+    <text x="260" y="372" text-anchor="middle"
+          fill="#94a3b8" font-size="11" font-weight="700" font-family="monospace">E1</text>
+    <text x="260" y="390" text-anchor="middle"
+          fill="#64748b" font-size="9" font-family="Arial">Tank TK-301</text>
+  </g>
+  <g id="eq-E2" class="equipment-g" data-id="E2" data-type="vertical_tank"
+     onclick="selectEquipment('E2')">
+    <title>E2: Tank TK-302\nDestination Storage</title>
+    <!-- tank body -->
+    <rect x="600" y="150" width="120" height="180" rx="3"
+          fill="url(#tankGrad)" stroke="#334155" stroke-width="2"/>
+    <!-- top head (elliptical) -->
+    <ellipse cx="660" cy="150" rx="60" ry="14"
+             fill="#1e293b" stroke="#334155" stroke-width="2"/>
+    <!-- bottom head -->
+    <ellipse cx="660" cy="330" rx="60" ry="14"
+             fill="#1e293b" stroke="#334155" stroke-width="2"/>
+    <!-- liquid level indicator (animated) -->
+    <rect id="liq-eq-E2" x="603" y="240" width="114" height="88"
+          fill="#0ea5e9" opacity="0.3" class="tank-liquid"/>
+    <!-- nozzle top -->
+    <line x1="660" y1="136" x2="660" y2="121"
+          stroke="#475569" stroke-width="4"/>
+    <!-- nozzle bottom -->
+    <line x1="660" y1="344" x2="660" y2="359"
+          stroke="#475569" stroke-width="4"/>
+    <!-- equipment tag bubble -->
+    <rect x="600" y="360" width="120" height="18" rx="3"
+          fill="#0f2744" stroke="#334155" stroke-width="1"/>
+    <text x="660" y="372" text-anchor="middle"
+          fill="#94a3b8" font-size="11" font-weight="700" font-family="monospace">E2</text>
+    <text x="660" y="390" text-anchor="middle"
+          fill="#64748b" font-size="9" font-family="Arial">Tank TK-302</text>
+  </g>
+  <g id="eq-E3" class="equipment-g clickable" data-id="E3" data-type="pump"
+     onclick="togglePump('E3')">
+    <title>E3: Pump P-301\nTransfer</title>
+    <!-- pump casing -->
+    <circle cx="440" cy="230" r="30" fill="#0f172a" stroke="#475569" stroke-width="2.5"
+            id="pcasing-E3"/>
+    <!-- impeller (spins) -->
+    <g id="pimp-E3" style="transform-origin:440px 230px">
+      <line x1="440" y1="230" x2="440" y2="206" stroke="#475569" stroke-width="3" stroke-linecap="round"/>
+      <line x1="440" y1="230" x2="464" y2="246" stroke="#475569" stroke-width="3" stroke-linecap="round"/>
+      <line x1="440" y1="230" x2="416" y2="246" stroke="#475569" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <circle cx="440" cy="230" r="5" fill="#475569" id="phub2-E3"/>
+    <!-- suction stub -->
+    <line x1="400" y1="230" x2="380" y2="230" stroke="#475569" stroke-width="4"/>
+    <!-- discharge stub -->
+    <line x1="480" y1="230" x2="500" y2="230" stroke="#475569" stroke-width="4"/>
+    <text x="440" y="278" text-anchor="middle" fill="#94a3b8"
+          font-size="11" font-weight="700" font-family="monospace">E3</text>
+    <text x="440" y="290" text-anchor="middle" fill="#64748b" font-size="9">Pump P-301</text>
+  </g>
+  <g id="eq-E4" class="equipment-g clickable" data-id="E4" data-type="valve"
+     onclick="toggleValvePID('E4')">
+    <title>E4: Relief Valve PSV-301</title>
+    <polygon points="480,260 520,260 500,300"
+             fill="#0f172a" stroke="#475569" stroke-width="2" id="vtri1-E4"/>
+    <polygon points="480,300 520,300 500,260"
+             fill="#0f172a" stroke="#475569" stroke-width="2" id="vtri2-E4"/>
+    <!-- stem -->
+    <line x1="500" y1="260" x2="500" y2="240" stroke="#475569" stroke-width="2"/>
+    <!-- actuator (for control valves) -->
+    
+    <text x="500" y="314" text-anchor="middle" fill="#94a3b8"
+          font-size="9" font-weight="700" font-family="monospace">E4</text>
+  </g>
+  <g id="ins-I1" class="instrument-g" data-id="I1" data-type="LT"
+     onclick="selectInstrument('I1')">
+    <title>LT-301: Level | Value: 50.0 %</title>
+    <!-- ISA instrument bubble (field-mounted = solid circle) -->
+    <circle cx="220" cy="160" r="22" fill="white" stroke="#334155" stroke-width="2"/>
+    <!-- dividing line (indicates field-mounted) -->
+    <line x1="198" y1="160" x2="242" y2="160" stroke="#334155" stroke-width="1.5"/>
+    <!-- measured variable (top) -->
+    <text x="220" y="155" text-anchor="middle" fill="#0f172a"
+          font-size="11" font-weight="700" font-family="Arial">L</text>
+    <!-- function (bottom) -->
+    <text x="220" y="173" text-anchor="middle" fill="#0f172a"
+          font-size="9" font-weight="600" font-family="Arial">T</text>
+    <!-- loop number (outside, bottom-right) -->
+    <text x="238" y="182" text-anchor="start" fill="#64748b"
+          font-size="8" font-family="monospace">301</text>
+    <!-- process value display below bubble -->
+    <rect x="194" y="185" width="52" height="16" rx="3"
+          fill="#0f172a" stroke="#1e3a5f" stroke-width="1"/>
+    <text id="ival-I1" x="220" y="196" text-anchor="middle"
+          fill="#22c55e" font-size="9" font-weight="700" font-family="monospace"
+          >50.0 %</text>
+    <!-- signal line to process equipment -->
+    <line x1="220" y1="182" x2="220" y2="202" stroke="#334155" stroke-width="1.5"
+          stroke-dasharray="4 2"/>
+  </g>
+  <g id="ins-I2" class="instrument-g" data-id="I2" data-type="LT"
+     onclick="selectInstrument('I2')">
+    <title>LT-302: Level | Value: 50.0 %</title>
+    <!-- ISA instrument bubble (field-mounted = solid circle) -->
+    <circle cx="620" cy="160" r="22" fill="white" stroke="#334155" stroke-width="2"/>
+    <!-- dividing line (indicates field-mounted) -->
+    <line x1="598" y1="160" x2="642" y2="160" stroke="#334155" stroke-width="1.5"/>
+    <!-- measured variable (top) -->
+    <text x="620" y="155" text-anchor="middle" fill="#0f172a"
+          font-size="11" font-weight="700" font-family="Arial">L</text>
+    <!-- function (bottom) -->
+    <text x="620" y="173" text-anchor="middle" fill="#0f172a"
+          font-size="9" font-weight="600" font-family="Arial">T</text>
+    <!-- loop number (outside, bottom-right) -->
+    <text x="638" y="182" text-anchor="start" fill="#64748b"
+          font-size="8" font-family="monospace">302</text>
+    <!-- process value display below bubble -->
+    <rect x="594" y="185" width="52" height="16" rx="3"
+          fill="#0f172a" stroke="#1e3a5f" stroke-width="1"/>
+    <text id="ival-I2" x="620" y="196" text-anchor="middle"
+          fill="#22c55e" font-size="9" font-weight="700" font-family="monospace"
+          >50.0 %</text>
+    <!-- signal line to process equipment -->
+    <line x1="620" y1="182" x2="620" y2="202" stroke="#334155" stroke-width="1.5"
+          stroke-dasharray="4 2"/>
+  </g>
+  <g id="ins-I3" class="instrument-g" data-id="I3" data-type="FT"
+     onclick="selectInstrument('I3')">
+    <title>FT-301: Flow | Value: 100.0 L/min</title>
+    <!-- ISA instrument bubble (field-mounted = solid circle) -->
+    <circle cx="400" cy="280" r="22" fill="white" stroke="#334155" stroke-width="2"/>
+    <!-- dividing line (indicates field-mounted) -->
+    <line x1="378" y1="280" x2="422" y2="280" stroke="#334155" stroke-width="1.5"/>
+    <!-- measured variable (top) -->
+    <text x="400" y="275" text-anchor="middle" fill="#0f172a"
+          font-size="11" font-weight="700" font-family="Arial">F</text>
+    <!-- function (bottom) -->
+    <text x="400" y="293" text-anchor="middle" fill="#0f172a"
+          font-size="9" font-weight="600" font-family="Arial">T</text>
+    <!-- loop number (outside, bottom-right) -->
+    <text x="418" y="302" text-anchor="start" fill="#64748b"
+          font-size="8" font-family="monospace">301</text>
+    <!-- process value display below bubble -->
+    <rect x="374" y="305" width="52" height="16" rx="3"
+          fill="#0f172a" stroke="#1e3a5f" stroke-width="1"/>
+    <text id="ival-I3" x="400" y="316" text-anchor="middle"
+          fill="#22c55e" font-size="9" font-weight="700" font-family="monospace"
+          >100.0 L/min</text>
+    <!-- signal line to process equipment -->
+    <line x1="400" y1="302" x2="400" y2="322" stroke="#334155" stroke-width="1.5"
+          stroke-dasharray="4 2"/>
+  </g>
+  <g id="ins-I4" class="instrument-g" data-id="I4" data-type="LIC"
+     onclick="selectInstrument('I4')">
+    <title>LIC-301: Level Control | Value: — %</title>
+    <!-- ISA instrument bubble (field-mounted = solid circle) -->
+    <circle cx="350" cy="220" r="22" fill="white" stroke="#334155" stroke-width="2"/>
+    <!-- dividing line (indicates field-mounted) -->
+    <line x1="328" y1="220" x2="372" y2="220" stroke="#334155" stroke-width="1.5"/>
+    <!-- measured variable (top) -->
+    <text x="350" y="215" text-anchor="middle" fill="#0f172a"
+          font-size="11" font-weight="700" font-family="Arial">L</text>
+    <!-- function (bottom) -->
+    <text x="350" y="233" text-anchor="middle" fill="#0f172a"
+          font-size="9" font-weight="600" font-family="Arial">IC</text>
+    <!-- loop number (outside, bottom-right) -->
+    <text x="368" y="242" text-anchor="start" fill="#64748b"
+          font-size="8" font-family="monospace">301</text>
+    <!-- process value display below bubble -->
+    <rect x="324" y="245" width="52" height="16" rx="3"
+          fill="#0f172a" stroke="#1e3a5f" stroke-width="1"/>
+    <text id="ival-I4" x="350" y="256" text-anchor="middle"
+          fill="#22c55e" font-size="9" font-weight="700" font-family="monospace"
+          >— %</text>
+    <!-- signal line to process equipment -->
+    <line x1="350" y1="242" x2="350" y2="262" stroke="#334155" stroke-width="1.5"
+          stroke-dasharray="4 2"/>
+  </g>
+  <g id="loop-LC1" class="instrument-g dcs-instrument" onclick="selectLoop('LC1')">
+    <title>LC1: </title>
+    <!-- DCS indicator controller (dashed border = panel-mounted) -->
+    <circle cx="400" cy="150" r="24" fill="white" stroke="#334155" stroke-width="2"
+            stroke-dasharray="5 3"/>
+    <line x1="376" y1="150" x2="424" y2="150" stroke="#334155" stroke-width="1.5"/>
+    <text x="400" y="144" text-anchor="middle" fill="#0f172a"
+          font-size="11" font-weight="700" font-family="Arial">L</text>
+    <text x="400" y="163" text-anchor="middle" fill="#0f172a"
+          font-size="9" font-weight="700" font-family="Arial">IC</text>
+    <!-- setpoint display -->
+    <text x="400" y="190" text-anchor="middle" fill="#0ea5e9"
+          font-size="9" font-family="monospace">SP:80</text>
+    <!-- loop ID -->
+    <text x="400" y="202" text-anchor="middle" fill="#64748b"
+          font-size="9" font-weight="700" font-family="monospace">LC1</text>
+  </g>
+  <!-- Title Block (bottom-right) -->
+  <rect x="750" y="690" width="340" height="55" fill="#0a1628" stroke="#334155" stroke-width="1.5"/>
+  <line x1="750" y1="710" x2="1090" y2="710" stroke="#334155" stroke-width="1"/>
+  <line x1="850" y1="710" x2="850" y2="745" stroke="#334155" stroke-width="1"/>
+  <line x1="950" y1="710" x2="950" y2="745" stroke="#334155" stroke-width="1"/>
+  <text x="920" y="703" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700"
+        font-family="Arial">Pump Transfer System - P-301</text>
+  <text x="800" y="725" text-anchor="middle" fill="#64748b" font-size="8">PROJECT: Two-Tank Pump T</text>
+  <text x="800" y="738" text-anchor="middle" fill="#64748b" font-size="8">DRAWN BY: AI Engineer</text>
+  <text x="900" y="725" text-anchor="middle" fill="#64748b" font-size="8">REV: A</text>
+  <text x="900" y="738" text-anchor="middle" fill="#64748b" font-size="8">P&ID</text>
+  <text x="1020" y="725" text-anchor="middle" fill="#64748b" font-size="8">DATE: 2024</text>
+  <text x="1020" y="738" text-anchor="middle" fill="#64748b" font-size="8">SHEET: 1 OF 1</text>
+
+    </svg>
+  </div>
+
+  <!-- Right Control Panel -->
+  <div class="ctrl-area">
+
+    <div class="ctrl-section">
+      <div class="ctrl-title">System Control</div>
+      <div class="main-btns">
+        <button class="ctrl-btn btn-start" onclick="startProcess()">&#9654; START</button>
+        <button class="ctrl-btn btn-stop"  onclick="stopProcess()">&#9632; STOP</button>
+      </div>
+      <div class="status-row">
+        <span class="sys-dot" id="sysDot"></span>
+        <span class="status-txt" id="sysTxt">STOPPED</span>
+      </div>
+    </div>
+
+    <div class="ctrl-section">
+      <div class="ctrl-title">Selected Equipment</div>
+      <div class="info-card" id="selCard">
+        <div class="info-id">—</div>
+        <div class="info-svc">Click any equipment to inspect</div>
+      </div>
+    </div>
+
+    <div class="ctrl-section">
+      <div class="ctrl-title">Live Process Values</div>
+      <div id="liveValues" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+
+    <div class="ctrl-section">
+      <div class="ctrl-title">Legend</div>
+      <div class="legend-row"><div class="legend-line active"></div> Active flow pipe</div>
+      <div class="legend-row"><div class="legend-line"></div> Process pipe</div>
+      <div class="legend-row"><div class="legend-line dashed"></div> Instrument signal</div>
+      <div style="margin-top:8px;font-size:9px;color:#475569">
+        ISA 5.1 instrument bubbles:<br>
+        Circle = Field-mounted<br>
+        Dashed circle = DCS/Panel
+      </div>
+    </div>
+
+    <div class="ctrl-section" style="flex:1">
+      <div class="ctrl-title">Event Log</div>
+      <div class="event-log" id="eventLog">
+        <div class="ev-item ev-info">P&amp;ID loaded — system ready</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── CLOCK ────────────────────────────────────────────────────────
+function tick(){const t=new Date().toLocaleTimeString('en-GB');const c=document.getElementById('hdrClock');if(c)c.textContent=t;}
+setInterval(tick,1000); tick();
+
+// ── LOG ──────────────────────────────────────────────────────────
+function log(cls,msg){
+  const el=document.getElementById('eventLog');if(!el)return;
+  const d=document.createElement('div');d.className='ev-item ev-'+cls;
+  d.textContent=new Date().toLocaleTimeString('en-GB')+'  '+msg;
+  el.prepend(d);while(el.children.length>40)el.removeChild(el.lastChild);
+}
+
+// ── SIM DATA ─────────────────────────────────────────────────────
+const SIM_DATA = {"equipment": [{"id": "E1", "type": "vertical_tank", "label": "Tank TK-301", "service": "Source Storage", "x": 200, "y": 150, "width": 120, "height": 180}, {"id": "E2", "type": "vertical_tank", "label": "Tank TK-302", "service": "Destination Storage", "x": 600, "y": 150, "width": 120, "height": 180}, {"id": "E3", "type": "pump", "label": "Pump P-301", "service": "Transfer", "x": 400, "y": 200, "width": 80, "height": 60}, {"id": "E4", "type": "valve", "label": "Relief Valve PSV-301", "service": "Safety", "x": 480, "y": 260, "width": 40, "height": 40}], "instruments": [{"id": "I1", "tag": "LT-301", "type": "LT", "service": "Level", "x": 220, "y": 160, "connected_to": "E1", "setpoint": null, "hi_alarm": 90, "lo_alarm": 15, "value": 50, "unit": "%", "loop": "301"}, {"id": "I2", "tag": "LT-302", "type": "LT", "service": "Level", "x": 620, "y": 160, "connected_to": "E2", "setpoint": null, "hi_alarm": 85, "lo_alarm": 20, "value": 50, "unit": "%", "loop": "302"}, {"id": "I3", "tag": "FT-301", "type": "FT", "service": "Flow", "x": 400, "y": 280, "connected_to": "E3", "setpoint": null, "value": 100, "unit": "L/min", "loop": "301"}, {"id": "I4", "tag": "LIC-301", "type": "LIC", "service": "Level Control", "x": 350, "y": 220, "connected_to": "E3", "setpoint": 80, "value": null, "unit": "%", "loop": "301"}], "pipes": [{"id": "P1", "from": "E1", "to": "E3", "path": [[320, 240], [400, 240]], "service": "Process", "size": "2\"", "active": true}, {"id": "P2", "from": "E3", "to": "E2", "path": [[480, 240], [600, 240]], "service": "Process", "size": "2\"", "active": true}]};
+let sysRunning = false;
+let simTick = null;
+
+// Build live value cards from instruments
+function _buildLiveValues(){
+  const container = document.getElementById('liveValues');
+  if (!container) return;
+  SIM_DATA.instruments.forEach(ins => {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;'+
+      'background:#0a1628;border-radius:5px;padding:7px 10px;border-left:3px solid #0ea5e9;';
+    div.innerHTML = '<span style="font-size:10px;color:#64748b;font-family:monospace;">' +
+      (ins.tag||ins.id) + '</span><span id="lv-' + ins.id + '" style="font-size:12px;'+
+      'font-weight:700;color:#22c55e;font-family:monospace;">' +
+      (ins.value !== undefined ? ins.value : '—') + ' ' + (ins.unit||'') + '</span>';
+    container.appendChild(div);
+  });
+}
+_buildLiveValues();
+
+// ── PROCESS START / STOP ──────────────────────────────────────────
+function startProcess(){
+  sysRunning = true;
+  document.getElementById('sysDot').className='sys-dot running';
+  document.getElementById('sysTxt').className='status-txt running';
+  document.getElementById('sysTxt').textContent='RUNNING';
+  // animate all pumps
+  document.querySelectorAll('.equipment-g[data-type="pump"],.equipment-g[data-type="centrifugal_pump"]')
+    .forEach(el => {
+      const id = el.dataset.id;
+      const imp = document.getElementById('pimp-'+id);
+      if(imp) imp.classList.add('spinning');
+      const cas = document.getElementById('pcasing-'+id);
+      if(cas) cas.setAttribute('stroke','#22c55e');
+    });
+  // activate pipes
+  document.querySelectorAll('.pipe-g').forEach(el => {
+    const line = el.querySelector('polyline');
+    if(line){line.classList.remove('pipe-process');line.classList.add('pipe-active');
+      line.setAttribute('marker-end','url(#arrow-active)');}
+  });
+  _startSimLoop();
+  log('ok','▶ Process STARTED — all equipment online');
+}
+
+function stopProcess(){
+  sysRunning = false;
+  document.getElementById('sysDot').className='sys-dot';
+  document.getElementById('sysTxt').className='status-txt';
+  document.getElementById('sysTxt').textContent='STOPPED';
+  document.querySelectorAll('.equipment-g').forEach(el => {
+    const id = el.dataset.id;
+    const imp = document.getElementById('pimp-'+id);
+    if(imp) imp.classList.remove('spinning');
+    const cas = document.getElementById('pcasing-'+id);
+    if(cas) cas.setAttribute('stroke','#475569');
+  });
+  document.querySelectorAll('.pipe-g').forEach(el => {
+    const line = el.querySelector('polyline');
+    if(line){line.classList.remove('pipe-active');line.classList.add('pipe-process');
+      line.setAttribute('marker-end','url(#arrow)');}
+  });
+  _stopSimLoop();
+  log('warn','■ Process STOPPED');
+}
+
+// ── PUMP / VALVE TOGGLES ──────────────────────────────────────────
+function togglePump(id){
+  if(!sysRunning){log('warn','⚠ Start system first');return;}
+  const imp = document.getElementById('pimp-'+id);
+  if(!imp) return;
+  const on = !imp.classList.contains('spinning');
+  if(on) imp.classList.add('spinning'); else imp.classList.remove('spinning');
+  const cas = document.getElementById('pcasing-'+id);
+  if(cas) cas.setAttribute('stroke', on ? '#22c55e' : '#475569');
+  log(on?'ok':'warn', id + (on?' started':' stopped'));
+}
+
+function toggleValvePID(id){
+  if(!sysRunning){log('warn','⚠ Start system first');return;}
+  const t1 = document.getElementById('vtri1-'+id);
+  const t2 = document.getElementById('vtri2-'+id);
+  if(!t1) return;
+  const open = t1.getAttribute('fill') === '#0f172a';
+  const col = open ? '#22c55e' : '#0f172a';
+  t1.setAttribute('fill',col); t2.setAttribute('fill',col);
+  t1.setAttribute('stroke', open ? '#22c55e' : '#475569');
+  t2.setAttribute('stroke', open ? '#22c55e' : '#475569');
+  log('info', id + (open ? ' OPENED' : ' CLOSED'));
+}
+
+// ── EQUIPMENT SELECTION ───────────────────────────────────────────
+function selectEquipment(id){
+  const eq = SIM_DATA.equipment.find(e => e.id === id);
+  if(!eq) return;
+  const card = document.getElementById('selCard');
+  if(card) card.innerHTML = `
+    <div class="info-id">${eq.id}</div>
+    <div class="info-svc">${eq.label} — ${eq.service||''}</div>
+    <div style="margin-top:6px;font-size:9px;color:#475569">
+      Design P: ${eq.design_pressure||'N/A'} | T: ${eq.design_temp||'N/A'}<br>
+      Material: ${eq.material||'N/A'} | Size: ${eq.width||'?'}×${eq.height||'?'}
+    </div>`;
+  log('info','Selected: '+id+' — '+eq.label);
+}
+
+function selectInstrument(id){
+  const ins = SIM_DATA.instruments.find(i => i.id === id);
+  if(!ins) return;
+  const card = document.getElementById('selCard');
+  if(card) card.innerHTML = `
+    <div class="info-id">${ins.tag||ins.id}</div>
+    <div class="info-svc">${ins.service||''}</div>
+    <div class="info-val" id="selVal">${ins.value||'—'} ${ins.unit||''}</div>
+    <div style="margin-top:6px;font-size:9px;color:#475569">
+      Hi: ${ins.hi_alarm||'N/A'} | Lo: ${ins.lo_alarm||'N/A'}
+    </div>`;
+  log('info','Instrument: '+id);
+}
+
+function selectLoop(id){
+  log('info','Control loop selected: '+id);
+}
+
+// ── SIMULATION LOOP ───────────────────────────────────────────────
+function _startSimLoop(){
+  if(simTick) return;
+  simTick = setInterval(_simStep, 1000);
+}
+function _stopSimLoop(){
+  if(simTick){clearInterval(simTick);simTick=null;}
+}
+
+function _simStep(){
+  if(!sysRunning) return;
+  SIM_DATA.instruments.forEach(ins => {
+    let val = parseFloat(ins.value) || 50;
+    const nMin = 20, nMax = 80;
+    val = Math.max(nMin-5, Math.min(nMax+5, val + (Math.random()-0.5)*1.5));
+    ins.value = parseFloat(val.toFixed(1));
+    // Update ISA bubble display
+    const ivel = document.getElementById('ival-'+ins.id);
+    if(ivel) ivel.textContent = val.toFixed(1)+' '+(ins.unit||'');
+    // Update live value panel
+    const lvel = document.getElementById('lv-'+ins.id);
+    if(lvel) lvel.textContent = val.toFixed(1)+' '+(ins.unit||'');
+    // Alarm check
+    if(ins.hi_alarm !== null && val >= ins.hi_alarm)
+      log('crit','🔔 HIGH ALARM: '+ins.tag+' = '+val.toFixed(1)+' '+(ins.unit||''));
+    else if(ins.lo_alarm !== null && val <= ins.lo_alarm)
+      log('crit','🔔 LOW ALARM: '+ins.tag+' = '+val.toFixed(1)+' '+(ins.unit||''));
+  });
+}
+</script>
+</body>
+</html>

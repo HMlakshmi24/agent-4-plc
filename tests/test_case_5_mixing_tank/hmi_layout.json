@@ -1,0 +1,165 @@
+{
+  "system_name": "Mixing Tank System",
+  "process_description": "Batch mixing tank: fill valve V-101, drain valve V-102, mixer motor M-101, level sensor LT-101 (0-100%), temperature sensor TT-101. Fill to 80%, mix until temp reaches 60 deg C, then drain.",
+  "theme": "food",
+  "mode": "Auto",
+  "components": [
+    {
+      "id": "TK501",
+      "type": "tank",
+      "label": "Mixing Tank TK-501",
+      "tag": "TK-501",
+      "value": 0.0,
+      "unit": "%",
+      "sim": {
+        "fill_rate": 20,
+        "drain_rate": 20,
+        "capacity": 2000,
+        "hi_alarm": 90,
+        "lo_alarm": 5,
+        "normal_min": 5,
+        "normal_max": 85
+      },
+      "_id": "TK501"
+    },
+    {
+      "id": "V501",
+      "type": "valve",
+      "label": "Fill Valve V-501",
+      "tag": "V-501",
+      "state": "closed",
+      "value": 0,
+      "_id": "V501"
+    },
+    {
+      "id": "V502",
+      "type": "valve",
+      "label": "Drain Valve V-502",
+      "tag": "V-502",
+      "state": "closed",
+      "value": 0,
+      "_id": "V502"
+    },
+    {
+      "id": "M501",
+      "type": "motor",
+      "label": "Mixer Motor M-501",
+      "tag": "M-501",
+      "state": "stopped",
+      "sim": {
+        "fill_rate": 0
+      },
+      "_id": "M501"
+    },
+    {
+      "id": "LT501",
+      "type": "sensor_level",
+      "label": "Level Sensor LT-501",
+      "tag": "LT-501",
+      "value": 0.0,
+      "unit": "%",
+      "sim": {
+        "hi_alarm": 85,
+        "lo_alarm": 5,
+        "normal_min": 5,
+        "normal_max": 85
+      },
+      "_id": "LT501"
+    },
+    {
+      "id": "TT501",
+      "type": "sensor_temp",
+      "label": "Temp Sensor TT-501",
+      "tag": "TT-501",
+      "value": 20.0,
+      "unit": "degC",
+      "sim": {
+        "hi_alarm": 70,
+        "normal_min": 20,
+        "normal_max": 65
+      },
+      "_id": "TT501"
+    },
+    {
+      "id": "gauge_temp",
+      "type": "gauge",
+      "label": "Mix Temperature",
+      "tag": "TT-501",
+      "value": 20,
+      "unit": "degC",
+      "_id": "gauge_temp"
+    },
+    {
+      "id": "ALM_HLVL",
+      "type": "alarm",
+      "label": "High Level",
+      "tag": "ALM-LVL",
+      "state": "inactive",
+      "_id": "ALM_HLVL"
+    },
+    {
+      "id": "ALM_HTMP",
+      "type": "alarm",
+      "label": "High Temperature",
+      "tag": "ALM-TMP",
+      "state": "inactive",
+      "_id": "ALM_HTMP"
+    },
+    {
+      "id": "btn_start_5",
+      "type": "button",
+      "label": "Start System",
+      "state": "inactive",
+      "tag": "PB-501",
+      "_id": "btn_start_5"
+    },
+    {
+      "id": "btn_stop_5",
+      "type": "button",
+      "label": "Stop System",
+      "state": "inactive",
+      "tag": "PB-502",
+      "_id": "btn_stop_5"
+    },
+    {
+      "id": "btn_estop_5",
+      "type": "button",
+      "label": "Emergency Stop",
+      "state": "inactive",
+      "tag": "ESTOP",
+      "_id": "btn_estop_5"
+    }
+  ],
+  "connections": [
+    {
+      "from": "V501",
+      "to": "TK501",
+      "label": "Inlet",
+      "active_when": "open"
+    },
+    {
+      "from": "TK501",
+      "to": "V502",
+      "label": "Outlet",
+      "active_when": "open"
+    },
+    {
+      "from": "M501",
+      "to": "TK501",
+      "label": "Mixing",
+      "active_when": "running"
+    }
+  ],
+  "alarms": [
+    {
+      "tag": "ALM-LVL",
+      "description": "High Level in Tank",
+      "priority": "high"
+    },
+    {
+      "tag": "ALM-TMP",
+      "description": "High Temperature in Mix",
+      "priority": "high"
+    }
+  ]
+}

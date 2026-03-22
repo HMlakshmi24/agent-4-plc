@@ -39,10 +39,12 @@ from backend.routes.hmi import router as hmi_router
 from backend.routes.ld_api import router as ld_api_router
 from backend.routes.login import router as auth_router
 from backend.routes.profile import router as profile_router
-from backend.routes.tokens import router as tokens_router
+from backend.routes.tokens import router as tokens_router, user_router as user_usage_router
 from backend.routes.ai_help import router as ai_help_router
 from backend.routes.support import router as support_router
-
+from backend.routes.perfect_plc_api import router as perfect_plc_router
+from backend.routes.pid_generator import router as pid_router
+from backend.routes.export import router as export_router
 
 # ──────────────────────────────────────────────────────────────
 # Lifespan (Modern Startup / Shutdown)
@@ -79,15 +81,19 @@ app.add_middleware(
 # ──────────────────────────────────────────────────────────────
 # Routers
 # ──────────────────────────────────────────────────────────────
+app.include_router(auth_router)
+app.include_router(profile_router)
 app.include_router(generate_router)
 app.include_router(history_router)
 app.include_router(hmi_router, prefix="/api/hmi", tags=["hmi"])
 app.include_router(ld_api_router)
-app.include_router(auth_router)
-app.include_router(profile_router)
 app.include_router(tokens_router)
 app.include_router(ai_help_router)
 app.include_router(support_router)
+app.include_router(perfect_plc_router)
+app.include_router(pid_router, prefix="/api/pid", tags=["pid"])
+app.include_router(export_router, prefix="/api/export", tags=["export"])
+app.include_router(user_usage_router)  # GET /api/user/usage, GET /api/user/usage/logs
 
 # ──────────────────────────────────────────────────────────────
 # Root Health Check
@@ -107,6 +113,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "backend.main:app",
         host="0.0.0.0",
-        port=8001,
+        port=8000,
         reload=True
     )

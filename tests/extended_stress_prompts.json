@@ -1,0 +1,322 @@
+[
+  {
+    "id": 11,
+    "name": "Conveyor Speed Control",
+    "domain": "conveyor",
+    "program_name": "ConveyorSpeed",
+    "brand": "SIEMENS",
+    "description": "Variable speed conveyor control. Q_ConveyorMotor drives belt. I_SpeedHigh detects over-speed condition and triggers Fault. I_PartSensor counts parts entering the line. E-Stop I_EStop highest priority. Program: ConveyorSpeed"
+  },
+  {
+    "id": 12,
+    "name": "Conveyor Jam Recovery",
+    "domain": "conveyor",
+    "program_name": "ConveyorJam",
+    "brand": "SIEMENS",
+    "description": "Conveyor system with automatic jam recovery. I_JamSensor activates Fault state, de-energises Q_ConveyorMotor, sounds Q_Alarm. Manual reset I_Reset required. Auto-restart allowed only after I_JamCleared confirmed TRUE. Timer T_RestartDelay = 5 seconds. Program: ConveyorJam"
+  },
+  {
+    "id": 13,
+    "name": "Inclined Conveyor with Load Sensor",
+    "domain": "conveyor",
+    "program_name": "InclinedConveyor",
+    "brand": "CODESYS",
+    "description": "Inclined belt conveyor for aggregate loading. I_LoadSensor detects overload condition. I_SlipSensor detects belt slip. Either fault stops Q_BeltMotor immediately. Counter M_CycleCount tracks loading cycles. E-Stop I_EStop mandatory. Program: InclinedConveyor"
+  },
+  {
+    "id": 14,
+    "name": "Conveyor Diverter Gate",
+    "domain": "conveyor",
+    "program_name": "DiverterGate",
+    "brand": "SIEMENS",
+    "description": "Conveyor with diverter gate. Main belt Q_MainMotor runs continuously. I_PartSensor detects part. M_PartCount increments. Every 10 parts actuate Q_DiverterSolenoid for T_DivertTime (2 seconds) to divert to reject lane. E-Stop I_EStop halts all outputs. Program: DiverterGate"
+  },
+  {
+    "id": 15,
+    "name": "Conveyor Accumulation Zone",
+    "domain": "conveyor",
+    "program_name": "AccumZone",
+    "brand": "SIEMENS",
+    "description": "Accumulation conveyor zone. Q_ZoneMotor runs when downstream zone is clear (I_ZonePermit = TRUE). If downstream zone blocked (I_ZonePermit = FALSE), stop Q_ZoneMotor after T_AccumDelay (3 seconds). E-Stop I_EStop overrides all. Program: AccumZone"
+  },
+  {
+    "id": 16,
+    "name": "Booster Pump Station",
+    "domain": "pump",
+    "program_name": "BoosterPump",
+    "brand": "SIEMENS",
+    "description": "Booster pump station with two pumps in duty-standby configuration. Duty pump Q_Pump1 starts on low pressure I_LowPressure. If Q_Pump1 overload I_Overload1 trips, standby pump Q_Pump2 starts automatically. E-Stop I_EStop halts both pumps. Q_Alarm on any fault. Program: BoosterPump"
+  },
+  {
+    "id": 17,
+    "name": "Sump Pump Level Control",
+    "domain": "pump",
+    "program_name": "SumpPump",
+    "brand": "CODESYS",
+    "description": "Sump pump controlled by level sensors. Q_SumpPump starts when I_LevelHigh is TRUE. Stops when I_LevelLow is TRUE. Dry run protection: if pump runs for T_DryRunTimer (30 seconds) without reaching I_LevelLow, trigger Fault. E-Stop I_EStop. Program: SumpPump"
+  },
+  {
+    "id": 18,
+    "name": "Fire Pump Control",
+    "domain": "pump",
+    "program_name": "FirePump",
+    "brand": "SIEMENS",
+    "description": "Fire pump control panel. Q_FirePump starts automatically on I_FireDetect signal OR manual start I_Start. Pump runs continuously once started until I_Reset pressed. Q_PumpFault if I_Overload trips. I_LowSuctionPressure triggers warning Q_Alarm but does NOT stop pump. Program: FirePump"
+  },
+  {
+    "id": 19,
+    "name": "Dosing Pump with Flow Meter",
+    "domain": "pump",
+    "program_name": "DosingFlow",
+    "brand": "SIEMENS",
+    "description": "Chemical dosing pump with flow verification. Q_DosePump runs for T_DoseTime (60 seconds). I_FlowFault confirms no flow detected during dosing operation. If flow absent after 10 seconds, stop pump and trigger Fault. M_DoseCount tracks dose count. E-Stop I_EStop. Program: DosingFlow"
+  },
+  {
+    "id": 20,
+    "name": "Irrigation Pump Zone Control",
+    "domain": "pump",
+    "program_name": "IrrigationPump",
+    "brand": "CODESYS",
+    "description": "Irrigation pump for 4 zones. Q_PumpMotor runs when any zone valve is open. Zone 1 via Q_Zone1Valve, Zone 2 via Q_Zone2Valve. Each zone has a run timer. I_LowWater stops all zones. E-Stop I_EStop highest priority. Program: IrrigationPump"
+  },
+  {
+    "id": 21,
+    "name": "Water Treatment Chlorination",
+    "domain": "dosing",
+    "program_name": "ChlorineDose",
+    "brand": "SIEMENS",
+    "description": "Water treatment chlorination system. Q_ChlorinePump doses when I_FlowActive TRUE. Dose proportional to flow. I_ChlResidualHigh stops dosing immediately. I_ChlResidualLow triggers alarm Q_Alarm. E-Stop I_EStop mandatory. Manual override I_ManualDose. Program: ChlorineDose"
+  },
+  {
+    "id": 22,
+    "name": "Water Treatment Filtration",
+    "domain": "tank",
+    "program_name": "FiltrationCtrl",
+    "brand": "CODESYS",
+    "description": "Water treatment sand filter control. I_DiffPressureHigh triggers backwash cycle. Backwash: close I_InletValve, open Q_BackwashValve, run Q_BackwashPump for T_BackwashTime (120 seconds), then return to service. E-Stop I_EStop halts all. Program: FiltrationCtrl"
+  },
+  {
+    "id": 23,
+    "name": "Water Treatment UV Disinfection",
+    "domain": "heater",
+    "program_name": "UVDisinfect",
+    "brand": "SIEMENS",
+    "description": "UV disinfection system. Q_UVLamp energises when I_FlowActive. I_UVFault (lamp failure) triggers Fault state and stops Q_UVLamp. I_TempHigh UV cell overtemperature also triggers Fault. Lamp hours tracked in M_LampHours counter. E-Stop I_EStop. Program: UVDisinfect"
+  },
+  {
+    "id": 24,
+    "name": "Water Treatment Aeration",
+    "domain": "hvac",
+    "program_name": "AerationCtrl",
+    "brand": "CODESYS",
+    "description": "Aeration blower control for water treatment. Q_BlowerMotor runs during aeration cycle T_AerateTime (300 seconds). I_OverPressure stops blower immediately and forces Fault. I_Overload also forces Fault. Q_Alarm on any fault. E-Stop I_EStop. Program: AerationCtrl"
+  },
+  {
+    "id": 25,
+    "name": "Water Treatment Sludge Pump",
+    "domain": "pump",
+    "program_name": "SludgePump",
+    "brand": "SIEMENS",
+    "description": "Sludge dewatering pump. Runs on timed cycle: Q_SludgePump ON for T_OnTime (60 seconds), OFF for T_OffTime (300 seconds). I_LevelLow disables pump to prevent dry running. I_Overload triggers Fault. Manual jog I_Jog bypasses cycle timer. E-Stop I_EStop. Program: SludgePump"
+  },
+  {
+    "id": 26,
+    "name": "HVAC Air Handling Unit",
+    "domain": "hvac",
+    "program_name": "AHUControl",
+    "brand": "SIEMENS",
+    "description": "Air Handling Unit with supply and return fans. Q_SupplyFan and Q_ReturnFan start together on I_Start. I_TempHigh room temperature triggers increased fan speed flag M_HighSpeed. I_FilterFault stops both fans and triggers Q_Alarm. E-Stop I_EStop halts all outputs. Program: AHUControl"
+  },
+  {
+    "id": 27,
+    "name": "HVAC Chiller Control",
+    "domain": "hvac",
+    "program_name": "ChillerCtrl",
+    "brand": "CODESYS",
+    "description": "Chiller unit control. Q_CompressorMotor starts when I_TempHigh. Stops when I_TempNormal. High pressure I_HighPressure triggers Fault and stops Q_CompressorMotor immediately. Low pressure I_LowPressure triggers warning Q_Alarm only. Startup delay T_StartDelay = 5 seconds. E-Stop I_EStop. Program: ChillerCtrl"
+  },
+  {
+    "id": 28,
+    "name": "HVAC Cooling Tower Fan",
+    "domain": "hvac",
+    "program_name": "CoolingTower",
+    "brand": "SIEMENS",
+    "description": "Cooling tower fan control. Q_TowerFan starts when I_WaterTempHigh. Stops when I_WaterTempNormal. I_Overload triggers Fault. I_VibrationFault also triggers Fault. Q_Alarm on any fault. Basin level I_LevelLow stops fan and triggers alarm. E-Stop I_EStop. Program: CoolingTower"
+  },
+  {
+    "id": 29,
+    "name": "HVAC Exhaust Fan Interlock",
+    "domain": "hvac",
+    "program_name": "ExhaustFan",
+    "brand": "CODESYS",
+    "description": "Exhaust fan with fire damper interlock. Q_ExhaustFan only runs when Q_FireDamper is confirmed OPEN by I_DamperOpen feedback. If I_FireAlarm activates, close damper Q_FireDamper immediately and stop Q_ExhaustFan. E-Stop I_EStop halts all. Program: ExhaustFan"
+  },
+  {
+    "id": 30,
+    "name": "HVAC VAV Box Control",
+    "domain": "hvac",
+    "program_name": "VAVControl",
+    "brand": "SIEMENS",
+    "description": "Variable Air Volume box control. Q_VAVDamper modulates based on I_RoomTempHigh / I_RoomTempNormal signals. M_DemandHigh flag set when temperature deviation exceeds setpoint. Q_HeaterElement energises in winter mode I_WinterMode. E-Stop I_EStop mandatory. Program: VAVControl"
+  },
+  {
+    "id": 31,
+    "name": "Acid Dosing Safety Interlock",
+    "domain": "dosing",
+    "program_name": "AcidDosing",
+    "brand": "SIEMENS",
+    "description": "Acid dosing system with mandatory safety interlocks. Q_AcidPump only permitted when I_NeutraliserReady AND I_PHSensorOK AND I_SafetyShower NOT active. Dose timer T_DoseTime = 20 seconds. I_PHHigh stops dosing immediately. Counter M_DoseCount. E-Stop I_EStop. Program: AcidDosing"
+  },
+  {
+    "id": 32,
+    "name": "Polymer Dosing System",
+    "domain": "dosing",
+    "program_name": "PolymerDose",
+    "brand": "CODESYS",
+    "description": "Polymer dosing for flocculation. Q_PolyPump doses in proportion to flow. I_FlowFault stops dosing. Mixing confirmed by I_AgitatorRunning before dosing allowed. Dose timer T_DoseTime = 30 seconds per cycle. Q_Alarm on any fault. E-Stop I_EStop. Program: PolymerDose"
+  },
+  {
+    "id": 33,
+    "name": "Caustic Dosing with Flush",
+    "domain": "dosing",
+    "program_name": "CausticDose",
+    "brand": "SIEMENS",
+    "description": "Caustic soda dosing with automatic line flush. After each dose cycle Q_CausticPump, open Q_FlushValve for T_FlushTime (10 seconds) to clear lines. I_TankLow stops dosing and triggers Q_Alarm. I_SafetyValveOpen interlock must be TRUE before dosing. E-Stop I_EStop. Program: CausticDose"
+  },
+  {
+    "id": 34,
+    "name": "Biocide Dosing with Timer",
+    "domain": "dosing",
+    "program_name": "BiocideDose",
+    "brand": "CODESYS",
+    "description": "Biocide dosing on timed schedule. Q_BiocidePump runs for T_DoseTime (15 seconds) every T_DoseInterval (4 hours). I_TankLow stops dosing. I_Overload triggers Fault. M_DoseCount resets daily at M_DailyReset. E-Stop I_EStop mandatory. Program: BiocideDose"
+  },
+  {
+    "id": 35,
+    "name": "Inhibitor Dosing Proportional",
+    "domain": "dosing",
+    "program_name": "InhibitorDose",
+    "brand": "SIEMENS",
+    "description": "Scale inhibitor dosing proportional to system flow. Q_InhibitorPump runs when I_FlowActive. Dose rate set by M_DoseRate. I_TankEmpty stops pump and triggers Q_Alarm. I_HighConductivity triggers additional dose pulse. E-Stop I_EStop halts all. Program: InhibitorDose"
+  },
+  {
+    "id": 36,
+    "name": "Batch Reactor Temperature Sequence",
+    "domain": "reactor",
+    "program_name": "ReactorTemp",
+    "brand": "SIEMENS",
+    "description": "Batch reactor with temperature-controlled sequence. Steps: Fill via Q_InletValve to I_LevelHigh, Heat via Q_Heater to I_TempHigh, Hold at temperature for T_HoldTime (600 seconds), Cool by stopping Q_Heater until I_TempNormal, Drain via Q_DrainValve. E-Stop I_EStop. Program: ReactorTemp"
+  },
+  {
+    "id": 37,
+    "name": "Neutralisation Reactor",
+    "domain": "reactor",
+    "program_name": "NeutralReactor",
+    "brand": "CODESYS",
+    "description": "Acid-base neutralisation reactor. Fill with Q_AcidValve until I_LevelHigh. Add base via Q_BaseValve. Agitate with Q_AgitatorMotor. I_PHNeutral confirms reaction complete. Drain via Q_DrainValve. I_PHFault or I_OverTemp triggers Fault state. E-Stop I_EStop. Program: NeutralReactor"
+  },
+  {
+    "id": 38,
+    "name": "Polymerisation Reactor",
+    "domain": "reactor",
+    "program_name": "PolyReactor",
+    "brand": "SIEMENS",
+    "description": "Polymerisation reactor with exothermic runaway protection. Q_AgitatorMotor runs throughout. Q_Heater in heat phase. I_TempHigh at 180 degC triggers emergency cooling Q_CoolantValve. I_TempCritical at 200 degC triggers Fault and Q_Alarm. E-Stop I_EStop. Program: PolyReactor"
+  },
+  {
+    "id": 39,
+    "name": "Fermentation Batch Reactor",
+    "domain": "reactor",
+    "program_name": "FermentReactor",
+    "brand": "CODESYS",
+    "description": "Fermentation batch with multi-step sequence. Sterilise at I_TempHigh (121 degC) for T_SterilTime (20 minutes), Cool to I_TempFerm (35 degC), Inoculate pulse Q_InocalValve for T_InocalTime (30 seconds), Ferment Q_AgitatorMotor for T_FermTime (24 hours counter). E-Stop I_EStop. Program: FermentReactor"
+  },
+  {
+    "id": 40,
+    "name": "Crystallisation Batch Reactor",
+    "domain": "reactor",
+    "program_name": "CrystReactor",
+    "brand": "SIEMENS",
+    "description": "Crystallisation reactor sequence. Dissolve at I_TempHigh, Cool slowly via Q_JacketValve until I_TempLow reached, Seed crystals added via Q_SeedValve when I_TempSeed TRUE, Hold for T_CrystTime (120 minutes). Drain via Q_DrainValve. E-Stop I_EStop mandatory. Program: CrystReactor"
+  },
+  {
+    "id": 41,
+    "name": "DOL Motor Starter",
+    "domain": "motor",
+    "program_name": "DOLStarter",
+    "brand": "SIEMENS",
+    "description": "Direct-on-line motor starter. Q_Contactor energises on I_Start via edge trigger RT_Start. Stops on I_Stop or I_Overload. I_Overload trips latch fault state. Manual reset I_Reset required. Q_RunIndicator follows Q_Contactor state. E-Stop I_EStop cuts power immediately. Program: DOLStarter"
+  },
+  {
+    "id": 42,
+    "name": "Reversing Motor Starter",
+    "domain": "motor",
+    "program_name": "ReverseStart",
+    "brand": "CODESYS",
+    "description": "Reversing motor starter. Q_ForwardContactor and Q_ReverseContactor are interlocked - only one can be active. I_Forward starts forward direction, I_Reverse starts reverse. Changeover requires stopping via I_Stop first. T_ChangeoverDelay = 500ms. I_Overload triggers Fault. E-Stop I_EStop. Program: ReverseStart"
+  },
+  {
+    "id": 43,
+    "name": "Soft Starter Motor Control",
+    "domain": "motor",
+    "program_name": "SoftStart",
+    "brand": "SIEMENS",
+    "description": "Soft starter motor control. Q_SoftStartEnable energises the soft starter on I_Start. T_RampTime = 10 seconds ramp-up. I_MotorRunning feedback confirms motor running before system transitions to Running state. I_Overload and I_ThermalFault both trigger Fault. E-Stop I_EStop. Program: SoftStart"
+  },
+  {
+    "id": 44,
+    "name": "High Voltage Motor Starter",
+    "domain": "motor",
+    "program_name": "HVMotorStart",
+    "brand": "SIEMENS",
+    "description": "High voltage motor starter with field excitation sequence. Step 1: energise Q_StarterCoil. Step 2: wait T_ExciteDelay (3 seconds). Step 3: close Q_MainBreaker. I_MotorRunning confirms energisation. I_DifferentialFault or I_OverCurrent both trigger immediate Fault state. E-Stop I_EStop. Program: HVMotorStart"
+  },
+  {
+    "id": 45,
+    "name": "Submersible Pump Starter",
+    "domain": "motor",
+    "program_name": "SubmersibleStart",
+    "brand": "CODESYS",
+    "description": "Submersible pump with dry-run and overload protection. Q_PumpContactor starts on I_LevelHigh. Dry-run detected if I_MotorCurrentLow TRUE for T_DryRunTimer (15 seconds). Overload I_Overload triggers immediate Fault. Auto-restart after I_LevelHigh again with T_RestartDelay (30 seconds). E-Stop I_EStop. Program: SubmersibleStart"
+  },
+  {
+    "id": 46,
+    "name": "Emergency Shutdown System",
+    "domain": "motor",
+    "program_name": "ESDSystem",
+    "brand": "SIEMENS",
+    "description": "Emergency shutdown with dual-channel E-Stop. I_EStop1 and I_EStop2 are independently monitored. Either channel active forces all outputs Q_Motor1, Q_Motor2, Q_Valve1 to FALSE and locks in Fault state. Both channels must be reset (I_Reset1 AND I_Reset2) before restart allowed. Q_ESDAlarm output. Program: ESDSystem"
+  },
+  {
+    "id": 47,
+    "name": "Fire and Gas Safety Interlock",
+    "domain": "motor",
+    "program_name": "FireGasInterlock",
+    "brand": "SIEMENS",
+    "description": "Fire and gas detection interlock. I_SmokeDetector OR I_GasDetector triggers Q_FireAlarm after T_ConfirmDelay (3 seconds). Once confirmed, Q_ConveyorMotor, Q_Fan, Q_Heater all forced OFF. Q_SuppressValve opens. Manual reset I_FireReset required. E-Stop I_EStop highest priority. Program: FireGasInterlock"
+  },
+  {
+    "id": 48,
+    "name": "Safety Gate Interlock",
+    "domain": "motor",
+    "program_name": "SafetyGate",
+    "brand": "CODESYS",
+    "description": "Machine safety gate interlock. I_GateOpen immediately stops Q_MachineMotor and Q_SpindleMotor. Machine cannot restart while I_GateOpen TRUE. T_GuardDelay (500ms) debounce on gate sensor. Muting input I_MutePermit allows gate open during maintenance mode only. E-Stop I_EStop. Program: SafetyGate"
+  },
+  {
+    "id": 49,
+    "name": "Pressure Relief Safety System",
+    "domain": "tank",
+    "program_name": "PressureRelief",
+    "brand": "SIEMENS",
+    "description": "Pressure vessel safety system. I_PressHigh (1st stage) triggers warning Q_Alarm only. I_PressHighHigh (2nd stage) stops all feed pumps Q_FeedPump and opens Q_ReliefValve. Q_ReliefValve stays open until I_PressNormal. I_PressHighHigh latches Fault state requiring I_Reset. E-Stop I_EStop. Program: PressureRelief"
+  },
+  {
+    "id": 50,
+    "name": "Temperature Safety Interlock",
+    "domain": "heater",
+    "program_name": "TempSafetyCtrl",
+    "brand": "SIEMENS",
+    "description": "Multi-zone temperature safety interlock. I_TempHigh Zone1 (150 degC) triggers Q_Zone1Alarm. I_TempHighHigh Zone1 (180 degC) stops Q_Zone1Heater and latches Fault. I_ThermalFault trips Fault immediately regardless of temperature. All zones share E-Stop I_EStop. Manual reset I_Reset per zone. Program: TempSafetyCtrl"
+  }
+]

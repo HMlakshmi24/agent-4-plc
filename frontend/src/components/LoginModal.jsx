@@ -188,6 +188,14 @@ export const LoginModal = ({ onClose, onLoginSuccess }) => {
           <div className="hidden md:flex flex-col justify-center w-5/12 bg-gradient-to-br from-blue-600 to-indigo-700 p-12 text-white relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
             <div className="relative z-10">
+              {/* Parijat Controlware Inc. Branding */}
+              <div className="mb-8">
+                <div className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  <span style={{ color: '#ffffff' }}>Parijat Controlware</span>{' '}
+                  <span style={{ color: '#ffffff' }}>Inc.</span>
+                </div>
+                <div className="text-indigo-200 text-xs mt-1 tracking-widest uppercase">Industrial AI Platform</div>
+              </div>
               <h2 className="text-4xl font-bold mb-6">Welcome Back</h2>
               <p className="text-blue-100 text-lg leading-relaxed mb-8">
                 Continue building compliant industrial automation logic with AI assistance.
@@ -429,6 +437,14 @@ export const RegisterModal = ({ onClose, onRegisterSuccess }) => {
           <div className="hidden md:flex flex-col justify-center w-5/12 bg-gradient-to-br from-indigo-600 to-purple-700 p-12 text-white relative">
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
             <div className="relative z-10">
+              {/* Parijat Controlware Inc. Branding */}
+              <div className="mb-8">
+                <div className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  <span style={{ color: '#ffffff' }}>Parijat Controlware</span>{' '}
+                  <span style={{ color: '#ffffff' }}>Inc.</span>
+                </div>
+                <div className="text-indigo-200 text-xs mt-1 tracking-widest uppercase">Industrial AI Platform</div>
+              </div>
               <h2 className="text-4xl font-bold mb-6">Join the Future</h2>
               <p className="text-indigo-100 text-lg mb-8">Create your free account to access the world's most advanced AI PLC generator.</p>
               <ul className="space-y-4">
@@ -442,6 +458,13 @@ export const RegisterModal = ({ onClose, onRegisterSuccess }) => {
           {/* Right Side */}
           <div className="w-full md:w-7/12 p-8 sm:p-12 overflow-y-auto">
             <div className="max-w-md mx-auto">
+              {/* Parijat Controlware Inc. Logo */}
+              <div style={{ textAlign: 'center', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '26px', fontWeight: 800, fontFamily: 'Inter, sans-serif', letterSpacing: '-0.5px', lineHeight: 1.2 }}>
+                  <span style={{ color: '#4f46e5' }}>Parijat Controlware</span>{' '}
+                  <span style={{ color: '#0891b2' }}>Inc.</span>
+                </div>
+              </div>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Create Account</h3>
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">Get started with your free account today.</p>
 
@@ -472,3 +495,4 @@ export const RegisterModal = ({ onClose, onRegisterSuccess }) => {
     </AnimatePresence>
   );
 };
+

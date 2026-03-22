@@ -30,10 +30,14 @@ def validate_layout(raw_json: str):
         data["title"] = "HMI Dashboard"
         data["system_name"] = "HMI Dashboard"
 
+    # ── Check for HTML based schema ──────────────────────────────
+    if "html" in data and "view_mode" in data:
+        return data
+
     # ── Require components ───────────────────────────────────────
     components = data.get("components")
     if not isinstance(components, list) or len(components) == 0:
-        raise ValueError("No components returned by AI.")
+        raise ValueError("No components or html returned by AI.")
 
     # ── Normalise each component ─────────────────────────────────
     used_positions = set()

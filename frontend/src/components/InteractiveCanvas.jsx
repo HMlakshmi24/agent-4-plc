@@ -1,31 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
-const InteractiveCanvas = ({ children, initialScale = 0.95 }) => {
+const InteractiveCanvas = ({ children, initialScale = 1 }) => {
     const containerRef = useRef(null);
     const [scale, setScale] = useState(initialScale);
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
+    const [dragCandidate, setDragCandidate] = useState(false);
     const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
 
-    // Center content on mount
-    useEffect(() => {
-        if (containerRef.current) {
-            const { clientWidth, clientHeight } = containerRef.current;
-            const contentW = 1200;
-            const contentH = 800;
-
-            const scaleX = (clientWidth - 140) / contentW;
-            const scaleY = (clientHeight - 140) / contentH;
-            const fitScale = Math.min(scaleX, scaleY, 1);
-
-            setScale(fitScale);
-            setPosition({
-                x: (clientWidth - contentW * fitScale) / 2,
-                y: (clientHeight - contentH * fitScale) / 2
-            });
-        }
-    }, []);
+    // No auto-scaling - let content natural size
+    const effectiveScale = scale;
 
     const handleWheel = (e) => {
         if (e.ctrlKey || e.metaKey) {
@@ -38,16 +23,29 @@ const InteractiveCanvas = ({ children, initialScale = 0.95 }) => {
 
     // Custom Drag Logic (Space + Drag or Middle Click)
     const handleMouseDown = (e) => {
-        const isInteractive = e.target.closest('[data-interactive="true"]');
+        const isInteractive = e.target.closest('[data-interactive="true"], button, input, select, textarea, [role="button"]');
         if (isInteractive && e.button === 0) return;
-        if (e.button === 1 || e.button === 0) {
+        if (e.button === 1) {
             setIsDragging(true);
             setLastMousePos({ x: e.clientX, y: e.clientY });
             e.preventDefault();
+            return;
+        }
+        if (e.button === 0) {
+            setDragCandidate(true);
+            setLastMousePos({ x: e.clientX, y: e.clientY });
         }
     };
 
     const handleMouseMove = (e) => {
+        if (dragCandidate && !isDragging) {
+            const dx = e.clientX - lastMousePos.x;
+            const dy = e.clientY - lastMousePos.y;
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+                setIsDragging(true);
+                setDragCandidate(false);
+            }
+        }
         if (isDragging) {
             const dx = e.clientX - lastMousePos.x;
             const dy = e.clientY - lastMousePos.y;
@@ -58,6 +56,7 @@ const InteractiveCanvas = ({ children, initialScale = 0.95 }) => {
 
     const handleMouseUp = () => {
         setIsDragging(false);
+        setDragCandidate(false);
     };
 
     const handleZoomIn = () => setScale(s => Math.min(s * 1.2, 4));
@@ -94,20 +93,22 @@ const InteractiveCanvas = ({ children, initialScale = 0.95 }) => {
                 }}
             />
 
-            {/* Content Container */}
+            {/* Content Container - Enable pointer events for children */}
             <motion.div
                 style={{
-                    width: 1200,
-                    height: 800,
+                    width: '100%',
+                    height: '100%',
                     x: position.x,
                     y: position.y,
                     scale: scale,
                     originX: 0,
                     originY: 0
                 }}
-                className="absolute shadow-2xl bg-slate-900/60 backdrop-blur-sm border border-slate-700 rounded-3xl overflow-hidden"
+                className="absolute inset-0 shadow-2xl bg-slate-900/60 backdrop-blur-sm border border-slate-700 rounded-3xl overflow-visible"
             >
-                {children}
+                <div className="w-full h-full pointer-events-auto">
+                    {children}
+                </div>
             </motion.div>
 
             {/* Controls */}

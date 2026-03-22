@@ -1,13 +1,12 @@
 /**
  * DashboardRenderer.jsx
  *
- * Universal HMI Symbol Engine.
+ * Universal HMI Symbol Engine - INDUSTRY READY VERSION
+ * Clean, professional symbols with clear labels and names
  * AI returns: { title, theme, components:[{id,type,label,x,y,state,value}] }
- * This file renders each component by type — locally, no AI for rendering.
- * No domain detection. No templates. No extra files.
- * Different prompt → different JSON → different visual.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import useMachineState from './useMachineState';
 
 // ─── Inject keyframe animations once ─────────────────────────────────────────
 if (!document.getElementById('_hmi_kf')) {
@@ -16,9 +15,12 @@ if (!document.getElementById('_hmi_kf')) {
     s.textContent = `
         @keyframes hmiSpin  { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
         @keyframes hmiBlink { 0%,100%{opacity:1} 50%{opacity:0.15} }
-        @keyframes hmiPulse { 0%,100%{box-shadow:0 0 4px 2px #f85149aa}
-                              50%{box-shadow:0 0 18px 6px #f85149} }
+        @keyframes hmiPulse { 0%,100%{box-shadow:0 0 4px 2px #f85149aa} 50%{box-shadow:0 0 18px 6px #f85149} }
         @keyframes hmiFlow  { to{stroke-dashoffset:-30} }
+        @keyframes alarmPulse { 
+            0%,100%{opacity:1;transform:scale(1)} 
+            50%{opacity:0.7;transform:scale(1.05)} 
+        }
     `;
     document.head.appendChild(s);
 }
@@ -30,8 +32,131 @@ const sCol = s =>
         ['stopped', 'closed', 'fault'].includes(s) ? '#e74c3c' :
             ['partial', 'warning', 'ack'].includes(s) ? '#f39c12' : '#7f8c8d';
 
+const toNum = (value) => (typeof value === 'number' && !Number.isNaN(value) ? value : 0);
+
+const useCanvasSize = (ref) => {
+    const [size, setSize] = useState({ width: 1200, height: 700 });
+
+    useEffect(() => {
+        if (!ref.current || typeof ResizeObserver === 'undefined') return;
+        const observer = new ResizeObserver((entries) => {
+            const entry = entries[0];
+            if (!entry?.contentRect) return;
+            const next = {
+                width: Math.max(600, Math.round(entry.contentRect.width)),
+                height: Math.max(400, Math.round(entry.contentRect.height))
+            };
+            setSize(next);
+        });
+        observer.observe(ref.current);
+        return () => observer.disconnect();
+    }, [ref]);
+
+    return size;
+};
+
+const autoLayoutComponents = (components, canvasSize) => {
+    if (!components?.length) return components || [];
+
+    const xs = components.map((c) => toNum(c.x));
+    const ys = components.map((c) => toNum(c.y));
+    const rangeX = Math.max(...xs) - Math.min(...xs);
+    const rangeY = Math.max(...ys) - Math.min(...ys);
+
+    const sizeFor = (type) => {
+        switch (type) {
+            case 'tank': return { w: 110, h: 170 };
+            case 'motor': return { w: 90, h: 110 };
+            case 'pump': return { w: 90, h: 110 };
+            case 'fan': return { w: 90, h: 110 };
+            case 'compressor': return { w: 90, h: 110 };
+            case 'valve': return { w: 80, h: 90 };
+            case 'gauge': return { w: 110, h: 110 };
+            case 'alarm': return { w: 200, h: 70 };
+            case 'button': return { w: 120, h: 50 };
+            case 'slider': return { w: 140, h: 80 };
+            default:
+                if ((type || '').startsWith('sensor')) return { w: 90, h: 90 };
+                return { w: 100, h: 80 };
+        }
+    };
+
+    const boxes = components.map((c) => {
+        const size = sizeFor(c.type);
+        return {
+            x: toNum(c.x),
+            y: toNum(c.y),
+            w: size.w,
+            h: size.h
+        };
+    });
+
+    const hasOverlap = (() => {
+        for (let i = 0; i < boxes.length; i++) {
+            for (let j = i + 1; j < boxes.length; j++) {
+                const a = boxes[i];
+                const b = boxes[j];
+                const overlap = a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+                if (overlap) return true;
+            }
+        }
+        return false;
+    })();
+
+    const mean = (arr) => arr.reduce((s, v) => s + v, 0) / (arr.length || 1);
+    const std = (arr) => {
+        const m = mean(arr);
+        return Math.sqrt(mean(arr.map((v) => (v - m) ** 2)));
+    };
+
+    const lowVariance = std(xs) < 60 || std(ys) < 60;
+    const needsAutoLayout = hasOverlap || lowVariance || rangeX < 260 || rangeY < 220;
+    if (!needsAutoLayout) return components;
+
+    const width = Math.max(900, canvasSize?.width || 1200);
+    const topY = 70;
+    const rowGap = 170;
+    const midY = topY + rowGap;
+    const lowY = midY + rowGap;
+    const leftColX = 70;
+    const rightColX = width - 160;
+
+    const isAlarm = (c) => c.type === 'alarm';
+    const isControl = (c) => c.type === 'button' || c.type === 'slider';
+    const isInstrument = (c) => c.type === 'gauge' || (c.type || '').startsWith('sensor');
+    const isEquipment = (c) => !isAlarm(c) && !isControl(c) && !isInstrument(c);
+
+    const alarms = components.filter(isAlarm);
+    const controls = components.filter(isControl);
+    const instruments = components.filter(isInstrument);
+    const equipment = components.filter(isEquipment);
+
+    const next = components.map((c) => ({ ...c }));
+    const setPos = (component, x, y) => {
+        const idx = components.indexOf(component);
+        if (idx >= 0) next[idx] = { ...next[idx], x, y };
+    };
+
+    const placeRow = (items, y, spacing = 160) => {
+        if (!items.length) return;
+        const span = Math.max(1, items.length - 1);
+        const total = span * spacing;
+        const startX = Math.max(140, (width - total) / 2);
+        items.forEach((item, index) => setPos(item, startX + index * spacing, y));
+    };
+
+    placeRow(instruments, topY);
+    placeRow(equipment, midY);
+    placeRow(components.filter((c) => !isAlarm(c) && !isControl(c) && !isInstrument(c) && !isEquipment(c)), lowY);
+
+    alarms.forEach((item, index) => setPos(item, leftColX, topY + index * 70));
+    controls.forEach((item, index) => setPos(item, rightColX, topY + index * 70));
+
+    return next;
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// SYMBOL LIBRARY
+// INDUSTRY READY SYMBOL LIBRARY - Clean, Professional Design
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ── TANK ─────────────────────────────────────────────────────────────────────
@@ -48,22 +173,39 @@ function HMI_Tank({ c, running }) {
     const fH = (tH - 2 * eRY) * Math.max(0.03, lv / 100);
     const fY = eRY + (tH - 2 * eRY) * (1 - lv / 100);
     return (
-        <div style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center' }}>
+        <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center' }}>
             <svg width={tW} height={tH + 28} viewBox={`0 0 ${tW} ${tH + 28}`}>
-                <rect x={0} y={eRY} width={tW} height={tH - 2 * eRY} fill="#0a1628" stroke="#4a90d9" strokeWidth="1.5" />
-                <clipPath id={`tc_${c.id}`}><rect x={0} y={eRY} width={tW} height={tH - 2 * eRY} /></clipPath>
-                <rect x={0} y={fY} width={tW} height={fH} fill={col} opacity="0.85"
+                {/* Tank body with professional styling */}
+                <rect x={0} y={eRY} width={tW} height={tH - 2 * eRY} fill="#0a1628" stroke="#4a90d9" strokeWidth="2" rx="4" />
+                {/* Liquid fill */}
+                <clipPath id={`tc_${c.id}`}><rect x={0} y={eRY} width={tW} height={tH - 2 * eRY} rx="4" /></clipPath>
+                <rect x={0} y={fY} width={tW} height={fH} fill={col} opacity="0.8"
                     clipPath={`url(#tc_${c.id})`} style={{ transition: 'y 0.9s,height 0.9s,fill 0.4s' }} />
-                <rect x={4} y={fY + 3} width={7} height={Math.max(0, fH - 6)} rx="3" fill="rgba(255,255,255,0.12)" />
-                <ellipse cx={tW / 2} cy={eRY} rx={tW / 2} ry={eRY} fill="#0d2040" stroke="#4a90d9" strokeWidth="1.5" />
+                {/* Top ellipse */}
+                <ellipse cx={tW / 2} cy={eRY} rx={tW / 2} ry={eRY} fill="#0d2040" stroke="#4a90d9" strokeWidth="2" />
+                {/* Bottom ellipse */}
                 <ellipse cx={tW / 2} cy={tH - eRY} rx={tW / 2} ry={eRY} fill={col} opacity={lv > 5 ? 0.6 : 0} />
+                {/* High level indicator */}
                 {lv > 80 && <ellipse cx={tW / 2} cy={eRY * 2.2} rx={tW / 2 - 2} ry={eRY * 0.7}
-                    fill="none" stroke="#e74c3c" strokeWidth="1.5" strokeDasharray="3,2" />}
+                    fill="none" stroke="#e74c3c" strokeWidth="2" strokeDasharray="4,2" />}
+                {/* Level percentage */}
                 <text x={tW / 2} y={tH / 2 + 5} textAnchor="middle" fill="#fff"
-                    fontSize="13" fontWeight="800" fontFamily="monospace">{lv.toFixed(0)}%</text>
-                <text x={tW / 2} y={tH + 14} textAnchor="middle" fill="#e6edf3"
-                    fontSize="10" fontWeight="700" fontFamily="monospace">{c.label}</text>
+                    fontSize="14" fontWeight="800" fontFamily="monospace">{lv.toFixed(0)}%</text>
             </svg>
+            {/* Clean label below - industry standard */}
+            <div style={{ 
+                color: '#e6edf3', 
+                fontSize: 11, 
+                fontWeight: 700, 
+                fontFamily: 'monospace',
+                marginTop: 6,
+                padding: '2px 8px',
+                background: 'rgba(30,58,95,0.6)',
+                borderRadius: 4,
+                border: '1px solid #1e3a5f'
+            }}>
+                {c.label}
+            </div>
         </div>
     );
 }
@@ -74,7 +216,7 @@ function HMI_Pump({ c, running }) {
     useEffect(() => { if (!running) setOn(false); }, [running]);
     const col = on && running ? '#2ecc71' : '#e74c3c';
     return (
-        <div style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center', cursor: 'pointer' }}
+        <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center', cursor: 'pointer' }}
             onClick={() => running && setOn(p => !p)}>
             <svg width="64" height="64" viewBox="0 0 64 64">
                 <circle cx="32" cy="32" r="28" fill={on ? '#0c3020' : '#1c2030'} stroke={col} strokeWidth="2"
@@ -109,7 +251,7 @@ function HMI_Fan({ c, running }) {
     const col = on && running ? '#2ecc71' : '#7f8c8d';
     const spd = (c.value ?? 60) > 70 ? 0.7 : 1.2;
     return (
-        <div style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center', cursor: 'pointer' }}
+        <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center', cursor: 'pointer' }}
             onClick={() => running && setOn(p => !p)}>
             <svg width="72" height="72" viewBox="0 0 72 72">
                 <circle cx="36" cy="36" r="32" fill="#0a1628" stroke="#4a90d9" strokeWidth="1.5" />
@@ -144,7 +286,7 @@ function HMI_Motor({ c, running }) {
     }, [on, running]);
     const col = on && running ? '#2ecc71' : '#e74c3c';
     return (
-        <div style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center', cursor: 'pointer' }}
+        <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center', cursor: 'pointer' }}
             onClick={() => running && setOn(p => !p)}>
             <div style={{
                 width: 72, height: 62, background: '#0d2040', border: `2px solid ${col}`, borderRadius: 8,
@@ -174,7 +316,7 @@ function HMI_Compressor({ c, running }) {
     useEffect(() => { if (!running) setOn(false); }, [running]);
     const col = on && running ? '#2ecc71' : '#e74c3c';
     return (
-        <div style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center', cursor: 'pointer' }}
+        <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center', cursor: 'pointer' }}
             onClick={() => running && setOn(p => !p)}>
             <svg width="70" height="70" viewBox="0 0 70 70">
                 <rect x="5" y="5" width="60" height="60" rx="6" fill="#0d2040" stroke={col} strokeWidth="2" />
@@ -202,7 +344,7 @@ function HMI_Valve({ c, running }) {
     const sz = 13;
     const cycle = ['open', 'partial', 'closed'];
     return (
-        <div style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center', cursor: 'pointer' }}
+        <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center', cursor: 'pointer' }}
             onClick={() => running && setSt(s => cycle[(cycle.indexOf(s) + 1) % cycle.length])}>
             <svg width={sz * 3.2} height={sz * 3.2 + 20} viewBox={`0 0 ${sz * 3.2} ${sz * 3.2 + 20}`}>
                 <polygon points={`${sz * 0.3},${sz} ${sz * 1.6},${sz * 1.6} ${sz * 0.3},${sz * 2.2}`}
@@ -224,18 +366,22 @@ function HMI_Valve({ c, running }) {
 // ── ALARM ────────────────────────────────────────────────────────────────────
 function HMI_Alarm({ c }) {
     const [acked, setAcked] = useState(false);
-    const col = c.state === 'active' ? '#e74c3c' : c.state === 'warning' ? '#f39c12' : '#2ecc71';
+    // Only blink when alarm is ACTIVE - fixed issue with constant blinking
+    const alarmState = c.state || 'inactive';
+    const col = alarmState === 'active' ? '#e74c3c' : alarmState === 'warning' ? '#f39c12' : '#2ecc71';
     return (
         <div style={{
             position: 'absolute', left: c.x, top: c.y, display: 'flex', alignItems: 'center',
-            gap: 8, padding: '7px 14px', background: `${col}18`,
+            gap: 8, padding: '7px 14px', background: `${col}22`,
             border: `1.5px solid ${acked ? '#333' : col}`, borderRadius: 6,
             cursor: 'pointer', opacity: acked ? 0.45 : 1, minWidth: 180,
-            animation: !acked && c.state === 'active' ? 'hmiPulse 1.5s ease-in-out infinite' : 'none'
+            zIndex: 50,
+            // FIXED: Only apply animation when alarm is active and not acknowledged
+            animation: !acked && alarmState === 'active' ? 'alarmPulse 1.5s ease-in-out 2' : 'none'
         }}
             onClick={() => setAcked(p => !p)}>
             <span style={{ fontSize: 14 }}>
-                {c.state === 'active' ? '🔺' : c.state === 'warning' ? '⚠️' : '✅'}
+                {alarmState === 'active' ? '🔺' : alarmState === 'warning' ? '⚠️' : '✅'}
             </span>
             <div style={{ flex: 1 }}>
                 <div style={{
@@ -243,7 +389,7 @@ function HMI_Alarm({ c }) {
                     fontFamily: 'monospace', letterSpacing: '0.04em'
                 }}>{c.label}</div>
                 {!acked && <div style={{ color: acked ? '#555' : col, fontSize: 9, fontFamily: 'monospace' }}>
-                    {c.state?.toUpperCase()} — Click to ACK
+                    {alarmState.toUpperCase()} — Click to ACK
                 </div>}
             </div>
         </div>
@@ -272,7 +418,7 @@ function HMI_Gauge({ c, running }) {
         return `M ${s.x} ${s.y} A ${R} ${R} 0 ${pct * sweep > 180 ? 1 : 0} 1 ${e.x} ${e.y}`;
     };
     return (
-        <div style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center' }}>
+        <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <svg width="90" height="84" viewBox="0 0 90 84">
                 <path d={d(sA + sweep)} fill="none" stroke="#1e2228" strokeWidth="8" strokeLinecap="round" />
                 <path d={d(eA)} fill="none" stroke={col} strokeWidth="8" strokeLinecap="round"
@@ -282,13 +428,16 @@ function HMI_Gauge({ c, running }) {
                     y2={cy + 26 * Math.sin(eA * Math.PI / 180)}
                     stroke="#e6edf3" strokeWidth="1.5" strokeLinecap="round" />
                 <circle cx={cx} cy={cy} r="4" fill="#e6edf3" />
-                <text x={cx} y={cy + 22} textAnchor="middle" fill={col}
+                <text x={cx} y={cy + 14} textAnchor="middle" fill={col}
                     fontSize="13" fontWeight="800" fontFamily="monospace">{val.toFixed(0)}</text>
+                {c.unit && <text x={cx} y={cy + 26} textAnchor="middle" fill="#8b949e"
+                    fontSize="8" fontFamily="monospace">{c.unit}</text>}
             </svg>
             <div style={{
                 color: '#8b949e', fontSize: 9, fontFamily: 'monospace',
-                marginTop: -4
-            }}>{c.label} {c.unit || ''}</div>
+                marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.08em',
+                whiteSpace: 'nowrap'
+            }}>{c.label}</div>
         </div>
     );
 }
@@ -298,7 +447,7 @@ function HMI_Slider({ c }) {
     const [val, setVal] = useState(+(c.value ?? 50));
     const col = '#2f8f83';
     return (
-        <div style={{ position: 'absolute', left: c.x, top: c.y, minWidth: 130 }}>
+        <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y, minWidth: 130 }}>
             <div style={{ color: '#8b949e', fontSize: 9, fontFamily: 'monospace', marginBottom: 3 }}>{c.label}</div>
             <input type="range" min={c.min ?? 0} max={c.max ?? 100} value={val}
                 onChange={e => setVal(+e.target.value)}
@@ -312,20 +461,54 @@ function HMI_Slider({ c }) {
 }
 
 // ── BUTTON ───────────────────────────────────────────────────────────────────
-function HMI_Button({ c }) {
+const getButtonCommand = (label = '') => {
+    const text = String(label).toLowerCase();
+    if (text.includes('e-stop') || text.includes('estop') || text.includes('emergency')) return 'estop';
+    if (text.includes('reset')) return 'reset';
+    if (text.includes('stop') || text.includes('halt') || text.includes('off')) return 'stop';
+    if (text.includes('start') || text.includes('run') || text.includes('on')) return 'start';
+    return null;
+};
+
+function HMI_Button({ c, machineState, onCommand }) {
     const [active, setActive] = useState(c.state === 'active');
-    const lbl = c.label.toLowerCase();
-    const col = ['start', 'run', 'on'].some(k => lbl.includes(k)) ? '#238636'
-        : ['stop', 'off', 'e-stop', 'estop'].some(k => lbl.includes(k)) ? '#da3633'
-            : '#1f6feb';
+    const cmd = getButtonCommand(c.label);
+    const isStart = cmd === 'start';
+    const isStop = cmd === 'stop';
+    const isEstop = cmd === 'estop';
+    const isReset = cmd === 'reset';
+
+    const derivedActive = isStart ? !!machineState?.running
+        : isStop ? !machineState?.running
+            : isEstop ? !!machineState?.estop
+                : isReset ? false
+                    : active;
+
+    const col = isStart ? '#238636'
+        : isStop ? '#da3633'
+            : isEstop ? '#f59e0b'
+                : '#1f6feb';
+
+    const disabled = isStart && machineState?.estop;
+
+    const handleClick = () => {
+        if (disabled) return;
+        if (cmd && onCommand) {
+            onCommand(cmd);
+            return;
+        }
+        setActive((prev) => !prev);
+    };
+
     return (
-        <div style={{ position: 'absolute', left: c.x, top: c.y }}>
-            <button onClick={() => setActive(p => !p)} style={{
+        <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y }}>
+            <button onClick={handleClick} disabled={disabled} style={{
                 padding: '9px 18px', borderRadius: 6,
-                border: `1px solid ${active ? col : '#30363d'}`, cursor: 'pointer',
+                border: `1px solid ${derivedActive ? col : '#30363d'}`, cursor: disabled ? 'not-allowed' : 'pointer',
                 fontWeight: 700, fontSize: 11, letterSpacing: '0.06em',
-                background: active ? col : '#1c2333', color: active ? '#fff' : '#8b949e',
-                boxShadow: active ? `0 0 12px ${col}77` : 'none', transition: 'all 0.2s'
+                background: derivedActive ? col : '#1c2333', color: derivedActive ? '#fff' : '#8b949e',
+                boxShadow: derivedActive ? `0 0 12px ${col}77` : 'none', transition: 'all 0.2s',
+                opacity: disabled ? 0.5 : 1
             }}>
                 {c.label}
             </button>
@@ -344,7 +527,7 @@ function HMI_SensorLevel({ c, running }) {
     }, [running]);
     const col = vCol(val);
     return (
-        <div style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center' }}>
+        <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center' }}>
             <div style={{
                 fontSize: 9, color: '#8b949e', fontFamily: 'monospace',
                 letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 3
@@ -378,7 +561,7 @@ function HMI_SensorPressure({ c, running }) {
     }, [running]);
     const col = val > (c.max ?? 10) * 0.8 ? '#e74c3c' : '#4a90d9';
     return (
-        <div style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center' }}>
+        <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center' }}>
             <svg width="60" height="60" viewBox="0 0 60 60">
                 <circle cx="30" cy="30" r="27" fill="#0d2040" stroke={col} strokeWidth="1.5"
                     style={{ filter: `drop-shadow(0 0 4px ${col}66)` }} />
@@ -407,7 +590,7 @@ function HMI_SensorTemp({ c, running }) {
     }, [running]);
     const col = val > 80 ? '#e74c3c' : val > 50 ? '#f39c12' : '#4a90d9';
     return (
-        <div style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center' }}>
+        <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center' }}>
             <div style={{
                 width: 44, background: '#0d2040', border: `2px solid ${col}`, borderRadius: 8,
                 padding: '6px 4px', boxShadow: val > 80 ? `0 0 12px ${col}66` : 'none'
@@ -426,7 +609,7 @@ function HMI_SensorTemp({ c, running }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // SYMBOL ROUTER — AI decides type, this renders it
 // ═══════════════════════════════════════════════════════════════════════════════
-function HMISymbol({ c, running }) {
+function HMISymbol({ c, running, machineState, onCommand }) {
     const p = { c, running };
     switch (c.type) {
         case 'tank': return <HMI_Tank            {...p} />;
@@ -438,7 +621,7 @@ function HMISymbol({ c, running }) {
         case 'alarm': return <HMI_Alarm c={c} />;
         case 'gauge': return <HMI_Gauge           {...p} />;
         case 'slider': return <HMI_Slider c={c} />;
-        case 'button': return <HMI_Button c={c} />;
+        case 'button': return <HMI_Button c={c} machineState={machineState} onCommand={onCommand} />;
         case 'sensor_level': return <HMI_SensorLevel     {...p} />;
         case 'sensor_pressure': return <HMI_SensorPressure  {...p} />;
         case 'sensor_temp': return <HMI_SensorTemp      {...p} />;
@@ -516,7 +699,7 @@ function DefaultHMI() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // STATUS BAR
 // ═══════════════════════════════════════════════════════════════════════════════
-function StatusBar({ layout, running, setRunning }) {
+function StatusBar({ layout, machineState, setMachineState }) {
     const [clock, setClock] = useState('');
     useEffect(() => {
         const tick = () => setClock(new Date().toLocaleTimeString('en-GB', { hour12: false }));
@@ -527,10 +710,18 @@ function StatusBar({ layout, running, setRunning }) {
     const activeAlarms = (layout?.components || []).filter(
         c => c.type === 'alarm' && c.state === 'active'
     ).length;
+    const running = !!machineState?.running && !machineState?.estop;
+    const isEstop = !!machineState?.estop;
     return (
         <div style={{
-            display: 'flex', alignItems: 'center', gap: 12, padding: '9px 18px',
-            background: '#111827', borderBottom: '1px solid #30363d', flexShrink: 0
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '10px 18px',
+            background: 'linear-gradient(90deg, #0f1b2c 0%, #0a1524 60%, #0b1626 100%)',
+            borderBottom: '1px solid #1f2a3a',
+            boxShadow: '0 8px 20px rgba(0,0,0,0.45)',
+            flexShrink: 0
         }}>
             <div style={{
                 flex: 1, fontWeight: 800, fontSize: 14, color: '#e6edf3',
@@ -543,9 +734,19 @@ function StatusBar({ layout, running, setRunning }) {
                     display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px',
                     background: 'rgba(248,81,73,0.15)', border: '1px solid #f85149',
                     borderRadius: 4, color: '#f85149', fontSize: 11, fontWeight: 700,
-                    animation: 'hmiBlink 1.2s step-end infinite'
+                    animation: 'alarmPulse 1.6s ease-in-out 2'
                 }}>
                     🔔 {activeAlarms} ALARM{activeAlarms > 1 ? 'S' : ''}
+                </div>
+            )}
+            {isEstop && (
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: 6, padding: '3px 10px',
+                    background: 'rgba(245,158,11,0.15)', border: '1px solid #f59e0b',
+                    borderRadius: 4, color: '#f59e0b', fontSize: 11, fontWeight: 800,
+                    letterSpacing: '0.06em'
+                }}>
+                    E-STOP ACTIVE
                 </div>
             )}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -562,14 +763,27 @@ function StatusBar({ layout, running, setRunning }) {
                 </span>
             </div>
             <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#8b949e' }}>{clock}</span>
-            <button onClick={() => setRunning(r => !r)}
+            <button onClick={() => {
+                if (isEstop) {
+                    setMachineState({ estop: false });
+                    return;
+                }
+                setMachineState({ running: !running, estop: false });
+            }}
                 style={{
-                    padding: '5px 16px', borderRadius: 4, border: 'none', fontWeight: 700,
-                    fontSize: 11, cursor: 'pointer', letterSpacing: '0.05em',
-                    background: running ? '#da3633' : '#238636', color: '#fff',
-                    transition: 'all 0.2s'
+                    padding: '6px 18px',
+                    borderRadius: 6,
+                    border: `1px solid ${running ? '#f87171' : '#4ade80'}`,
+                    fontWeight: 800,
+                    fontSize: 11,
+                    cursor: 'pointer',
+                    letterSpacing: '0.07em',
+                    background: running ? 'linear-gradient(180deg,#ef4444,#b91c1c)' : 'linear-gradient(180deg,#22c55e,#15803d)',
+                    color: '#fff',
+                    transition: 'all 0.2s',
+                    boxShadow: running ? '0 0 14px rgba(239,68,68,0.45)' : '0 0 14px rgba(34,197,94,0.35)'
                 }}>
-                {running ? '■ STOP ALL' : '▶ START ALL'}
+                {isEstop ? 'RESET E-STOP' : (running ? 'STOP ALL' : 'START ALL')}
             </button>
         </div>
     );
@@ -579,25 +793,70 @@ function StatusBar({ layout, running, setRunning }) {
 // MAIN EXPORT
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function DashboardRenderer({ layout }) {
-    const [running, setRunning] = useState(false);
+    const [machineState, setMachineState] = useMachineState();
     const hasLayout = !!(layout?.components?.length);
+    const canvasRef = useRef(null);
+    const canvasSize = useCanvasSize(canvasRef);
 
-    useEffect(() => { if (!hasLayout) setRunning(false); }, [hasLayout]);
+    useEffect(() => {
+        if (!hasLayout) setMachineState({ running: false, estop: false });
+    }, [hasLayout, setMachineState]);
+
+    const running = !!machineState?.running && !machineState?.estop;
+    const arrangedComponents = useMemo(
+        () => autoLayoutComponents(layout?.components || [], canvasSize),
+        [layout, canvasSize]
+    );
+
+    const handleCommand = (cmd) => {
+        if (cmd === 'start') setMachineState({ running: true, estop: false });
+        if (cmd === 'stop') setMachineState({ running: false });
+        if (cmd === 'estop') setMachineState({ running: false, estop: true });
+        if (cmd === 'reset') setMachineState({ estop: false });
+    };
 
     return (
         <div style={{
-            position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-            background: '#0d1117', overflow: 'hidden'
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            background: 'radial-gradient(circle at 20% 10%, #132238 0%, #0b1320 40%, #070d16 100%)',
+            overflow: 'hidden'
         }}>
-            <StatusBar layout={layout} running={running} setRunning={setRunning} />
-            <div style={{ flex: 1, position: 'relative', overflow: 'auto' }}>
+            <StatusBar layout={layout} machineState={machineState} setMachineState={setMachineState} />
+            <div ref={canvasRef} style={{ flex: 1, position: 'relative', overflow: 'auto' }}>
+                <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    pointerEvents: 'none',
+                    opacity: 0.08,
+                    backgroundImage:
+                        'linear-gradient(#7dd3fc 1px, transparent 1px), linear-gradient(90deg, #7dd3fc 1px, transparent 1px)',
+                    backgroundSize: '56px 56px'
+                }} />
+                <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    pointerEvents: 'none',
+                    opacity: 0.12,
+                    background:
+                        'radial-gradient(circle at 70% 20%, rgba(14,165,233,0.35), transparent 45%), radial-gradient(circle at 15% 80%, rgba(34,197,94,0.25), transparent 50%)'
+                }} />
                 {!hasLayout
                     ? <DefaultHMI />
-                    : (layout.components || []).map(c =>
-                        <HMISymbol key={c.id || c.label} c={c} running={running} />
+                    : arrangedComponents.map(c =>
+                        <HMISymbol
+                            key={c.id || c.label}
+                            c={c}
+                            running={running}
+                            machineState={machineState}
+                            onCommand={handleCommand}
+                        />
                     )
                 }
             </div>
         </div>
     );
 }
+

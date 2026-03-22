@@ -1,0 +1,133 @@
+{
+  "system_name": "Tank Filling System - TK-101",
+  "revision": "A",
+  "project": "Tank Filling Project",
+  "drawn_by": "AutoMind AI",
+  "date": "2026-01-01",
+  "equipment": [
+    {
+      "id": "E1",
+      "type": "vertical_tank",
+      "label": "Tank TK-101",
+      "service": "Storage",
+      "x": 200,
+      "y": 150,
+      "width": 120,
+      "height": 180
+    },
+    {
+      "id": "E2",
+      "type": "pump",
+      "label": "Pump P-101",
+      "service": "Filling",
+      "x": 400,
+      "y": 150,
+      "width": 100,
+      "height": 100
+    },
+    {
+      "id": "E3",
+      "type": "valve",
+      "label": "Inlet Valve XV-101",
+      "service": "Discharge",
+      "x": 500,
+      "y": 150,
+      "width": 50,
+      "height": 50
+    },
+    {
+      "id": "E4",
+      "type": "valve",
+      "label": "Drain Valve XV-102",
+      "service": "Drain",
+      "x": 200,
+      "y": 330,
+      "width": 50,
+      "height": 50
+    }
+  ],
+  "instruments": [
+    {
+      "id": "I1",
+      "tag": "LT-101",
+      "type": "LT",
+      "service": "Level",
+      "x": 340,
+      "y": 160,
+      "connected_to": "E1",
+      "setpoint": null,
+      "hi_alarm": 95,
+      "lo_alarm": 15,
+      "value": 50,
+      "unit": "%",
+      "loop": "101"
+    },
+    {
+      "id": "I2",
+      "tag": "LIC-101",
+      "type": "Controller",
+      "service": "Level Control",
+      "x": 400,
+      "y": 250,
+      "connected_to": "I1",
+      "setpoint": 80,
+      "mode": "Auto"
+    },
+    {
+      "id": "I3",
+      "tag": "LSH-101",
+      "type": "Switch",
+      "service": "High Level Alarm",
+      "x": 340,
+      "y": 100,
+      "connected_to": "E1",
+      "setpoint": 95,
+      "value": 0,
+      "unit": "%",
+      "loop": "101"
+    },
+    {
+      "id": "I4",
+      "tag": "LSL-101",
+      "type": "Switch",
+      "service": "Low Level Alarm",
+      "x": 340,
+      "y": 300,
+      "connected_to": "E1",
+      "setpoint": 15,
+      "value": 0,
+      "unit": "%",
+      "loop": "101"
+    }
+  ],
+  "pipes": [
+    {
+      "id": "P1",
+      "from": "E2",
+      "to": "E1",
+      "path": [
+        [
+          450,
+          200
+        ],
+        [
+          320,
+          200
+        ]
+      ],
+      "service": "Process",
+      "size": "2\"",
+      "active": true
+    }
+  ],
+  "control_loops": [
+    {
+      "id": "LC1",
+      "controller": "LIC-101",
+      "controlled_variable": "TK-101 Level",
+      "manipulated_variable": "P-101 Speed",
+      "setpoint": 80,
+      "mode": "Auto"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "system_name": "Conveyor Sorting System - M-201",
+  "revision": "A",
+  "project": "Conveyor Sorting Project",
+  "drawn_by": "AutoMind AI",
+  "date": "2026-01-01",
+  "equipment": [
+    {
+      "id": "E1",
+      "type": "belt_conveyor",
+      "label": "Belt Conveyor",
+      "service": "Sorting",
+      "x": 300,
+      "y": 200,
+      "width": 300,
+      "height": 100
+    },
+    {
+      "id": "E2",
+      "type": "motor",
+      "label": "Motor M-201",
+      "service": "Drive",
+      "x": 300,
+      "y": 320,
+      "width": 100,
+      "height": 100
+    }
+  ],
+  "instruments": [
+    {
+      "id": "I1",
+      "tag": "PE-201",
+      "type": "photoelectric_sensor",
+      "service": "Infeed Detection",
+      "x": 200,
+      "y": 200,
+      "connected_to": "E1",
+      "setpoint": null,
+      "hi_alarm": null,
+      "lo_alarm": null,
+      "value": null,
+      "unit": null,
+      "loop": "201"
+    },
+    {
+      "id": "I2",
+      "tag": "ID-201",
+      "type": "metal_detector",
+      "service": "Mid-Belt Detection",
+      "x": 450,
+      "y": 200,
+      "connected_to": "E1",
+      "setpoint": null,
+      "hi_alarm": null,
+      "lo_alarm": null,
+      "value": null,
+      "unit": null,
+      "loop": "202"
+    },
+    {
+      "id": "I3",
+      "tag": "ST-201",
+      "type": "speed_transmitter",
+      "service": "Speed Monitoring",
+      "x": 350,
+      "y": 320,
+      "connected_to": "E2",
+      "setpoint": null,
+      "hi_alarm": null,
+      "lo_alarm": null,
+      "value": null,
+      "unit": "RPM",
+      "loop": "203"
+    }
+  ],
+  "pipes": [],
+  "control_loops": [
+    {
+      "id": "LC1",
+      "controller": "CC-201",
+      "controlled_variable": "Conveyor Speed",
+      "manipulated_variable": "Motor Speed",
+      "setpoint": 50,
+      "mode": "Auto"
+    }
+  ]
+}

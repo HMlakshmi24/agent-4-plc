@@ -1,0 +1,180 @@
+{
+  "system_name": "Pump Transfer System",
+  "process_description": "Two-tank transfer: source TK-301 (5000L) to destination TK-302 (8000L) via pump P-301, isolation valves XV-301 and XV-302, level sensors LT-301/302.",
+  "theme": "water",
+  "mode": "Auto",
+  "components": [
+    {
+      "id": "TK301",
+      "type": "tank",
+      "label": "Source Tank TK-301",
+      "tag": "TK-301",
+      "value": 75.0,
+      "unit": "%",
+      "sim": {
+        "fill_rate": 0,
+        "drain_rate": 25,
+        "capacity": 5000,
+        "hi_alarm": 90,
+        "lo_alarm": 15,
+        "lo_lo_alarm": 10,
+        "normal_min": 15,
+        "normal_max": 90
+      },
+      "_id": "TK301"
+    },
+    {
+      "id": "TK302",
+      "type": "tank",
+      "label": "Destination Tank TK-302",
+      "tag": "TK-302",
+      "value": 10.0,
+      "unit": "%",
+      "sim": {
+        "fill_rate": 25,
+        "drain_rate": 0,
+        "capacity": 8000,
+        "hi_alarm": 85,
+        "hi_hi_alarm": 95,
+        "lo_alarm": 20,
+        "normal_min": 20,
+        "normal_max": 85
+      },
+      "_id": "TK302"
+    },
+    {
+      "id": "P301",
+      "type": "pump",
+      "label": "Transfer Pump P-301",
+      "tag": "P-301",
+      "state": "stopped",
+      "sim": {
+        "fill_rate": 25
+      },
+      "_id": "P301"
+    },
+    {
+      "id": "XV301",
+      "type": "valve",
+      "label": "Suction Valve XV-301",
+      "tag": "XV-301",
+      "state": "open",
+      "value": 100,
+      "_id": "XV301"
+    },
+    {
+      "id": "XV302",
+      "type": "valve",
+      "label": "Discharge Valve XV-302",
+      "tag": "XV-302",
+      "state": "open",
+      "value": 100,
+      "_id": "XV302"
+    },
+    {
+      "id": "LT301",
+      "type": "sensor_level",
+      "label": "Level Sensor LT-301",
+      "tag": "LT-301",
+      "value": 75.0,
+      "unit": "%",
+      "sim": {
+        "lo_alarm": 15,
+        "lo_lo_alarm": 10,
+        "normal_min": 15,
+        "normal_max": 90
+      },
+      "_id": "LT301"
+    },
+    {
+      "id": "LT302",
+      "type": "sensor_level",
+      "label": "Level Sensor LT-302",
+      "tag": "LT-302",
+      "value": 10.0,
+      "unit": "%",
+      "sim": {
+        "hi_alarm": 85,
+        "hi_hi_alarm": 95,
+        "normal_min": 20,
+        "normal_max": 85
+      },
+      "_id": "LT302"
+    },
+    {
+      "id": "SP_DEST",
+      "type": "slider",
+      "label": "Dest Fill Target",
+      "value": 80,
+      "unit": "%",
+      "_id": "SP_DEST"
+    },
+    {
+      "id": "btn_start_3",
+      "type": "button",
+      "label": "Start System",
+      "state": "inactive",
+      "tag": "PB-301",
+      "_id": "btn_start_3"
+    },
+    {
+      "id": "btn_stop_3",
+      "type": "button",
+      "label": "Stop System",
+      "state": "inactive",
+      "tag": "PB-302",
+      "_id": "btn_stop_3"
+    },
+    {
+      "id": "btn_estop_3",
+      "type": "button",
+      "label": "Emergency Stop",
+      "state": "inactive",
+      "tag": "ESTOP",
+      "_id": "btn_estop_3"
+    }
+  ],
+  "connections": [
+    {
+      "from": "TK301",
+      "to": "XV301",
+      "label": "Suction",
+      "active_when": "open"
+    },
+    {
+      "from": "XV301",
+      "to": "P301",
+      "label": "Pump Suction",
+      "active_when": "running"
+    },
+    {
+      "from": "P301",
+      "to": "XV302",
+      "label": "Discharge",
+      "active_when": "running"
+    },
+    {
+      "from": "XV302",
+      "to": "TK302",
+      "label": "Transfer",
+      "active_when": "open"
+    }
+  ],
+  "alarms": [
+    {
+      "tag": "ALM-SRC-LO",
+      "description": "Source Tank Low-Low",
+      "priority": "critical"
+    },
+    {
+      "tag": "ALM-DST-HH",
+      "description": "Destination Tank High-High",
+      "priority": "critical"
+    },
+    {
+      "tag": "ALM-VLV",
+      "description": "Valve Fault Timeout",
+      "priority": "high"
+    }
+  ]
+}

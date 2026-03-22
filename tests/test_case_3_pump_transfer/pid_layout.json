@@ -1,0 +1,155 @@
+{
+  "system_name": "Pump Transfer System - P-301",
+  "revision": "A",
+  "project": "Two-Tank Pump Transfer",
+  "drawn_by": "AutoMind AI",
+  "date": "2026-01-01",
+  "equipment": [
+    {
+      "id": "E1",
+      "type": "vertical_tank",
+      "label": "Tank TK-301",
+      "service": "Source Storage",
+      "x": 200,
+      "y": 150,
+      "width": 120,
+      "height": 180
+    },
+    {
+      "id": "E2",
+      "type": "vertical_tank",
+      "label": "Tank TK-302",
+      "service": "Destination Storage",
+      "x": 600,
+      "y": 150,
+      "width": 120,
+      "height": 180
+    },
+    {
+      "id": "E3",
+      "type": "pump",
+      "label": "Pump P-301",
+      "service": "Transfer",
+      "x": 400,
+      "y": 200,
+      "width": 80,
+      "height": 60
+    },
+    {
+      "id": "E4",
+      "type": "valve",
+      "label": "Relief Valve PSV-301",
+      "service": "Safety",
+      "x": 480,
+      "y": 260,
+      "width": 40,
+      "height": 40
+    }
+  ],
+  "instruments": [
+    {
+      "id": "I1",
+      "tag": "LT-301",
+      "type": "LT",
+      "service": "Level",
+      "x": 220,
+      "y": 160,
+      "connected_to": "E1",
+      "setpoint": null,
+      "hi_alarm": 90,
+      "lo_alarm": 15,
+      "value": 50,
+      "unit": "%",
+      "loop": "301"
+    },
+    {
+      "id": "I2",
+      "tag": "LT-302",
+      "type": "LT",
+      "service": "Level",
+      "x": 620,
+      "y": 160,
+      "connected_to": "E2",
+      "setpoint": null,
+      "hi_alarm": 85,
+      "lo_alarm": 20,
+      "value": 50,
+      "unit": "%",
+      "loop": "302"
+    },
+    {
+      "id": "I3",
+      "tag": "FT-301",
+      "type": "FT",
+      "service": "Flow",
+      "x": 400,
+      "y": 280,
+      "connected_to": "E3",
+      "setpoint": null,
+      "value": 100,
+      "unit": "L/min",
+      "loop": "301"
+    },
+    {
+      "id": "I4",
+      "tag": "LIC-301",
+      "type": "LIC",
+      "service": "Level Control",
+      "x": 350,
+      "y": 220,
+      "connected_to": "E3",
+      "setpoint": 80,
+      "value": null,
+      "unit": "%",
+      "loop": "301"
+    }
+  ],
+  "pipes": [
+    {
+      "id": "P1",
+      "from": "E1",
+      "to": "E3",
+      "path": [
+        [
+          320,
+          240
+        ],
+        [
+          400,
+          240
+        ]
+      ],
+      "service": "Process",
+      "size": "2\"",
+      "active": true
+    },
+    {
+      "id": "P2",
+      "from": "E3",
+      "to": "E2",
+      "path": [
+        [
+          480,
+          240
+        ],
+        [
+          600,
+          240
+        ]
+      ],
+      "service": "Process",
+      "size": "2\"",
+      "active": true
+    }
+  ],
+  "control_loops": [
+    {
+      "id": "LC1",
+      "controller": "LIC-301",
+      "controlled_variable": "TK-301 Level",
+      "manipulated_variable": "P-301 Speed",
+      "setpoint": 80,
+      "mode": "Auto"
+    }
+  ]
+}

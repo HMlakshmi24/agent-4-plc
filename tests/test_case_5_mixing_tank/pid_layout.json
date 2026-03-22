@@ -1,0 +1,140 @@
+{
+  "system_name": "Mixing Tank System - TK-501",
+  "revision": "A",
+  "project": "Mixing Tank Batch System",
+  "drawn_by": "AutoMind AI",
+  "date": "2026-01-01",
+  "equipment": [
+    {
+      "id": "E1",
+      "type": "vertical_tank",
+      "label": "Tank TK-501",
+      "service": "Mixing",
+      "x": 200,
+      "y": 150,
+      "width": 120,
+      "height": 180
+    },
+    {
+      "id": "E2",
+      "type": "valve",
+      "label": "V-501",
+      "service": "Fill Valve",
+      "x": 350,
+      "y": 150,
+      "width": 30,
+      "height": 30
+    },
+    {
+      "id": "E3",
+      "type": "valve",
+      "label": "V-502",
+      "service": "Drain Valve",
+      "x": 200,
+      "y": 330,
+      "width": 30,
+      "height": 30
+    },
+    {
+      "id": "E4",
+      "type": "mixer",
+      "label": "M-501",
+      "service": "Agitator",
+      "x": 200,
+      "y": 100,
+      "width": 60,
+      "height": 60
+    }
+  ],
+  "instruments": [
+    {
+      "id": "I1",
+      "tag": "LT-501",
+      "type": "LT",
+      "service": "Level",
+      "x": 340,
+      "y": 160,
+      "connected_to": "E1",
+      "setpoint": null,
+      "hi_alarm": 90,
+      "lo_alarm": 10,
+      "value": 50,
+      "unit": "%",
+      "loop": "501"
+    },
+    {
+      "id": "I2",
+      "tag": "TT-501",
+      "type": "TT",
+      "service": "Temperature",
+      "x": 340,
+      "y": 220,
+      "connected_to": "E1",
+      "setpoint": 80,
+      "value": 75,
+      "unit": "°C",
+      "loop": "501"
+    },
+    {
+      "id": "I3",
+      "tag": "TSH-501",
+      "type": "HS",
+      "service": "High Temp Switch",
+      "x": 340,
+      "y": 280,
+      "connected_to": "E1",
+      "setpoint": 80,
+      "value": 85,
+      "unit": "°C",
+      "loop": "501"
+    }
+  ],
+  "pipes": [
+    {
+      "id": "P1",
+      "from": "E1",
+      "to": "E2",
+      "path": [
+        [
+          320,
+          240
+        ],
+        [
+          420,
+          240
+        ]
+      ],
+      "service": "Process",
+      "size": "2\"",
+      "active": true
+    },
+    {
+      "id": "P2",
+      "from": "E1",
+      "to": "E3",
+      "path": [
+        [
+          320,
+          330
+        ],
+        [
+          420,
+          330
+        ]
+      ],
+      "service": "Drain",
+      "size": "2\"",
+      "active": true
+    }
+  ],
+  "control_loops": [
+    {
+      "id": "LC1",
+      "controller": "LIC-501",
+      "controlled_variable": "TK-501 Level",
+      "manipulated_variable": "V-501 Position",
+      "setpoint": 80,
+      "mode": "Auto"
+    }
+  ]
+}
