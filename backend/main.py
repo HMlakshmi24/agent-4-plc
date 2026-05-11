@@ -45,6 +45,8 @@ from backend.routes.support import router as support_router
 from backend.routes.perfect_plc_api import router as perfect_plc_router
 from backend.routes.pid_generator import router as pid_router
 from backend.routes.export import router as export_router
+from backend.routes.io_upload import router as io_upload_router
+from backend.routes.doc_parse import router as doc_parse_router
 
 # ──────────────────────────────────────────────────────────────
 # Lifespan (Modern Startup / Shutdown)
@@ -93,6 +95,8 @@ app.include_router(support_router)
 app.include_router(perfect_plc_router)
 app.include_router(pid_router, prefix="/api/pid", tags=["pid"])
 app.include_router(export_router, prefix="/api/export", tags=["export"])
+app.include_router(io_upload_router)
+app.include_router(doc_parse_router)
 app.include_router(user_usage_router)  # GET /api/user/usage, GET /api/user/usage/logs
 
 # ──────────────────────────────────────────────────────────────

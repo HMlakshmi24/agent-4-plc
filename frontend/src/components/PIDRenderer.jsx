@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import useMachineState from './useMachineState';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -140,7 +140,7 @@ const PIDComponent = ({ component, runtime, onUpdate, simState, machineState, on
                     </defs>
                     <path d="M10,20 L10,130 Q10,145 50,145 Q90,145 90,130 L90,20 Q90,5 50,5 Q10,5 10,20 Z" fill="url(#tankGrad)" stroke="#cbd5e1" strokeWidth="2" />
                     <path d="M10,20 Q50,35 90,20" fill="none" stroke="#cbd5e1" strokeWidth="2" opacity="0.5" />
-                    <motion.rect
+                    <Motion.rect
                         x="12" y={fillY} width="76" height={fillHeight}
                         clipPath={`url(#${clipId})`} fill={levelColor} opacity="0.75"
                         initial={false}
@@ -172,20 +172,20 @@ const PIDComponent = ({ component, runtime, onUpdate, simState, machineState, on
                     <circle cx="50" cy="50" r="40" fill="#1e293b" stroke={isRun ? '#22c55e' : '#ef4444'} strokeWidth="4" />
                     {/* Pump impeller blades */}
                     {[0, 60, 120, 180, 240, 300].map((deg, i) => (
-                        <motion.line key={i}
+                        <Motion.line key={i}
                             x1="50" y1="50"
                             x2={50 + 28 * Math.cos((deg * Math.PI) / 180)}
                             y2={50 + 28 * Math.sin((deg * Math.PI) / 180)}
                             stroke={isRun ? '#22c55e' : '#ef4444'} strokeWidth="3" strokeLinecap="round"
                         />
                     ))}
-                    <motion.circle cx="50" cy="50" r="8" fill={isRun ? '#22c55e' : '#ef4444'}
+                    <Motion.circle cx="50" cy="50" r="8" fill={isRun ? '#22c55e' : '#ef4444'}
                         animate={isRun ? { scale: [1, 1.2, 1] } : { scale: 1 }}
                         transition={{ repeat: Infinity, duration: 1 }}
                     />
                     <path d="M20,90 L80,90" stroke="#cbd5e1" strokeWidth="4" />
                 </svg>
-                <motion.div
+                <Motion.div
                     animate={isRun ? { rotate: 360 } : { rotate: 0 }}
                     transition={isRun ? { repeat: Infinity, duration: 1.5, ease: 'linear' } : {}}
                     className="absolute"
@@ -241,7 +241,7 @@ const PIDComponent = ({ component, runtime, onUpdate, simState, machineState, on
                     <text x="50" y="45" textAnchor="middle" fontSize="14" fontWeight="bold" fill={isRun ? '#22c55e' : '#94a3b8'} fontFamily="monospace">M</text>
                     <rect x="0" y="32" width="10" height="16" rx="2" fill="#475569" />
                     <rect x="90" y="32" width="10" height="16" rx="2" fill="#475569" />
-                    {isRun && <motion.circle cx="50" cy="40" r="22" fill="none" stroke="#22c55e" strokeWidth="1" strokeDasharray="4 4"
+                    {isRun && <Motion.circle cx="50" cy="40" r="22" fill="none" stroke="#22c55e" strokeWidth="1" strokeDasharray="4 4"
                         animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: 'linear' }} />}
                 </svg>
                 <div className="text-xs font-mono text-slate-200 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-600 mt-1" style={{ whiteSpace: 'nowrap' }}>{name}</div>
@@ -277,7 +277,7 @@ const PIDComponent = ({ component, runtime, onUpdate, simState, machineState, on
             <div style={style} className="pointer-events-auto flex flex-col items-center"
                 role="button" tabIndex={0} onClick={() => update({ active: !isActive })}
                 onKeyDown={handleKey(() => update({ active: !isActive }))}>
-                <motion.div
+                <Motion.div
                     // Only animate briefly when active - avoid continuous blinking
                     animate={isActive ? { opacity: [1, 0.35, 1] } : { opacity: 1 }}
                     transition={isActive ? { repeat: 2, duration: 0.8 } : {}}
@@ -286,7 +286,7 @@ const PIDComponent = ({ component, runtime, onUpdate, simState, machineState, on
                         <polygon points="30,3 57,52 3,52" fill={isActive ? '#ef4444' : '#475569'} stroke="#94a3b8" strokeWidth="2" />
                         <text x="30" y="42" textAnchor="middle" fontSize="20" fontWeight="bold" fill="white">!</text>
                     </svg>
-                </motion.div>
+                </Motion.div>
                 <div className="text-[10px] font-mono text-slate-400 mt-1">{name}</div>
                 <div className={`text-[10px] font-bold ${isActive ? 'text-red-400' : 'text-slate-500'}`}>{isActive ? 'ACTIVE' : 'INACTIVE'}</div>
             </div>
@@ -323,7 +323,7 @@ const PIDComponent = ({ component, runtime, onUpdate, simState, machineState, on
                     <div className="w-9 h-1.5 bg-slate-600 rounded"></div>
                 </div>
                 <div className="w-2 h-20 bg-gradient-to-r from-slate-300 to-slate-500"></div>
-                <motion.div animate={{ rotateY: 360 }} transition={{ repeat: Infinity, duration: 0.9, ease: 'linear' }}
+                <Motion.div animate={{ rotateY: 360 }} transition={{ repeat: Infinity, duration: 0.9, ease: 'linear' }}
                     className="w-16 h-4 bg-slate-400 rounded-full border border-slate-600 opacity-80" />
                 <div className="text-xs font-mono text-slate-400 mt-1">{name}</div>
             </div>
@@ -418,17 +418,16 @@ export default function PIDRenderer({ layout }) {
     });
     const canvasRef = useRef(null);
     const canvasSize = useCanvasSize(canvasRef);
-
-    if (!layout || !layout.components) return null;
+    const components = useMemo(() => layout?.components || [], [layout]);
 
     const arrangedComponents = useMemo(
-        () => autoLayoutComponents(layout.components, canvasSize),
-        [layout, canvasSize]
+        () => autoLayoutComponents(components, canvasSize),
+        [components, canvasSize]
     );
 
-    const hasPump = layout.components.some(c => c.type === 'pump');
-    const hasTank = layout.components.some(c => c.type === 'tank');
-    const hasValve = layout.components.some(c => c.type === 'valve');
+    const hasPump = components.some((c) => c.type === 'pump');
+    const hasTank = components.some((c) => c.type === 'tank');
+    const hasValve = components.some((c) => c.type === 'valve');
 
     const running = !!machineState?.running && !machineState?.estop;
     const isEstop = !!machineState?.estop;
@@ -473,26 +472,26 @@ export default function PIDRenderer({ layout }) {
         return () => clearInterval(interval);
     }, [simState.pumpRunning]);
 
-const updateComponent = useCallback((id, patch) => {
+    const updateComponent = useCallback((id, patch) => {
         if (!id) return;
         setRuntimeState(prev => ({ ...prev, [id]: { ...(prev[id] || {}), ...patch } }));
-        
-        // Sync component state back to simState - FIXED: Properly control machines
-        const compType = id.toLowerCase();
-        
+
+        // Sync component state back to shared simulation state so UI controls stay coherent.
         if (patch.running !== undefined) {
-            // This is a pump or motor
             setSimState(prev => ({ ...prev, pumpRunning: patch.running, isRunning: patch.running }));
+            setMachineState({ running: patch.running, estop: false });
         }
         if (patch.open !== undefined) {
-            // This is a valve
             setSimState(prev => ({ ...prev, valveState: patch.open ? 'open' : 'closed' }));
         }
         if (patch.level !== undefined) {
-            // Tank level changed
-            setSimState(prev => ({ ...prev, tankLevel: patch.level }));
+            const nextLevel = Math.max(0, Math.min(100, patch.level));
+            setSimState(prev => ({ ...prev, tankLevel: nextLevel, alarm: nextLevel >= 90 }));
         }
-    }, []);
+        if (patch.active !== undefined) {
+            setSimState((prev) => ({ ...prev, alarm: !!patch.active || prev.alarm }));
+        }
+    }, [setMachineState]);
 
     const handleStart = () => {
         setMachineState({ running: true, estop: false });
@@ -518,6 +517,8 @@ const updateComponent = useCallback((id, patch) => {
     const handleReset = () => {
         setMachineState({ estop: false });
     };
+
+    if (!components.length) return null;
 
     return (
         <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
@@ -557,10 +558,10 @@ const updateComponent = useCallback((id, patch) => {
                         ● {running ? 'RUNNING' : 'STOPPED'}
                     </span>
                     {simState.alarm && (
-                        <motion.span animate={{ opacity: [1, 0.3, 1] }} transition={{ repeat: 2, duration: 0.6 }}
+                        <Motion.span animate={{ opacity: [1, 0.3, 1] }} transition={{ repeat: 2, duration: 0.6 }}
                             style={{ fontSize: '11px', color: '#ef4444', fontWeight: 'bold' }}>
                             ⚠ HIGH LEVEL ALARM
-                        </motion.span>
+                        </Motion.span>
                     )}
                 </div>
                 <div style={{ display: 'flex', gap: '14px', fontSize: '11px', color: '#94a3b8' }}>

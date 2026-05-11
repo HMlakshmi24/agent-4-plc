@@ -125,10 +125,16 @@ def final_iec_fix(code: str, program_name: str = "Main") -> str:
     code = re.sub(r'\bEND_VAR_INPUT\b', 'END_VAR', code, flags=re.IGNORECASE)
     code = re.sub(r'\bEND_VAR_OUTPUT\b', 'END_VAR', code, flags=re.IGNORECASE)
 
-    # Step 0a: Merge multiple PROGRAM blocks if LLM generated more than one
-    code = _merge_multiple_programs(code, program_name)
-
     U = code.upper()
+
+    # Step 0a: Merge/dedup only for PROGRAM-only code (no FUNCTION_BLOCK).
+    # The merge functions use PROGRAM regex that can false-match comment text like
+    # "Program Name" in multi-line header comments, destroying FB+PROGRAM code.
+    _has_fb = "FUNCTION_BLOCK" in U and "END_FUNCTION_BLOCK" in U
+    if not _has_fb:
+        code = _merge_multiple_programs(code, program_name)
+        code = _merge_duplicate_var_sections(code)
+        U = code.upper()
 
     # Ensure PROGRAM wrapper
     if "PROGRAM" not in U:
@@ -136,9 +142,6 @@ def final_iec_fix(code: str, program_name: str = "Main") -> str:
 
     if "END_PROGRAM" not in U:
         code += "\nEND_PROGRAM"
-
-    # Step 0b: Merge duplicate VAR sections within the single PROGRAM
-    code = _merge_duplicate_var_sections(code)
 
     # Remove illegal timer writes
     lines = code.splitlines()
@@ -166,14 +169,16 @@ def final_iec_fix(code: str, program_name: str = "Main") -> str:
                 inside_output = False # End of output block
 
             if inside_output and ":" in l and "BOOL" in l.upper():
-                # Extract variable name from "Name : BOOL;"
+                # Extract variable name from "Name : BOOL;" or "Name AT %Q0.0 : BOOL;"
                 parts = l.split(":")
                 name_part = parts[0].strip()
-                # Handle multiple standard declarations if possible, though strict ST usually 1 per line logic
-                names = [n.strip() for n in name_part.split(",")]
+                # Strip AT hardware address (e.g. "Q_Motor AT %Q0.0" → "Q_Motor")
+                name_part = re.sub(r'\s+AT\s+%\S+', '', name_part).strip()
+                names = [n.strip() for n in name_part.split(",") if n.strip()]
                 for name in names:
-                    output_names.append(name)
-                    reset_lines.append(f"{name} := FALSE;")
+                    if re.match(r'^[A-Za-z_]\w*$', name):  # valid identifier only
+                        output_names.append(name)
+                        reset_lines.append(f"{name} := FALSE;")
 
         # Skip reset injection if outputs are already assigned in logic body
         if output_names:

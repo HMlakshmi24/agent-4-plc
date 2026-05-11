@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { API } from '../config/api';
 import DashboardRenderer from './DashboardRenderer';
@@ -18,34 +18,7 @@ export default function HmiGeneratorV3() {
     const [designStyle, setDesignStyle] = useState("dashboard"); // "dashboard" or "pid"
     const [layout, setLayout] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [history, setHistory] = useState([]);
     const [quotaExceeded, setQuotaExceeded] = useState(false);
-
-    React.useEffect(() => {
-        const fetchHistory = async () => {
-            const token = localStorage.getItem("automind_token") || localStorage.getItem("token");
-            const user = JSON.parse(localStorage.getItem("automind_user") || localStorage.getItem("user_details") || "{}");
-            if (!token) return;
-
-            const headers = { Authorization: `Bearer ${token}` };
-            if (user.email) headers["X-User-Email"] = user.email;
-
-            try {
-                const res = await fetch(`${API}/history/`, { headers });
-                if (res.ok) {
-                    const data = await res.json();
-                    const formatted = data.map(item => ({
-                        ...JSON.parse(item.code || "{}"),
-                        system_name: item.program_name
-                    })).filter(l => l.style).reverse();
-                    setHistory(formatted);
-                }
-            } catch (e) {
-                console.error("Failed to fetch HMI history", e);
-            }
-        };
-        fetchHistory();
-    }, []);
 
     const handleGenerate = async () => {
         if (!prompt.trim()) return;
@@ -66,7 +39,6 @@ export default function HmiGeneratorV3() {
             if (res.data) {
                 const newLayout = { ...res.data, system_name: systemName };
                 setLayout(newLayout);
-                setHistory(prev => [newLayout, ...prev]);
                 setShowModal(false);
 
                 // Save to Global History Backend
@@ -238,7 +210,7 @@ export default function HmiGeneratorV3() {
 
     const renderLandingPage = () => (
         <div className="relative flex flex-col items-center justify-center p-8 py-20"> {/* Removed min-h-[80vh] for compact layout */}
-            <motion.div
+            <Motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
@@ -271,7 +243,7 @@ export default function HmiGeneratorV3() {
                     Supports Dashboards and P&ID Schematics for Industrial Automation.
                 </p>
 
-                <motion.button
+                <Motion.button
                     whileHover={{ scale: 1.05, boxShadow: '0 20px 30px -10px rgba(14, 165, 233, 0.4)' }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleStartProject}
@@ -289,12 +261,12 @@ export default function HmiGeneratorV3() {
                     }}
                 >
                     Start Project →
-                </motion.button>
+                </Motion.button>
 
                 <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', gap: '20px', fontSize: '0.85em', color: '#64748b' }}>
                     <span>HMI V3</span> • <span>Dashboard</span> • <span>P&ID</span> • <span>JSON Export</span>
                 </div>
-            </motion.div>
+            </Motion.div>
         </div>
     );
 
@@ -347,7 +319,7 @@ export default function HmiGeneratorV3() {
 
             <AnimatePresence>
                 {showModal && (
-                    <motion.div className="plc-modal-overlay-v2" onClick={() => setShowModal(false)}
+                    <Motion.div className="plc-modal-overlay-v2" onClick={() => setShowModal(false)}
                         style={{
                             position: 'fixed',
                             inset: 0,
@@ -359,7 +331,7 @@ export default function HmiGeneratorV3() {
                             background: 'rgba(0,0,0,0.6)'
                         }}
                     >
-                        <motion.div
+                        <Motion.div
                             className="plc-modal-v2"
                             onClick={(e) => e.stopPropagation()}
                             style={{
@@ -479,8 +451,8 @@ export default function HmiGeneratorV3() {
                                     </button>
                                 </div>
                             </div>
-                        </motion.div>
-                    </motion.div>
+                        </Motion.div>
+                    </Motion.div>
                 )}
             </AnimatePresence>
         </div >

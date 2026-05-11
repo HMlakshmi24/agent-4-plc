@@ -147,24 +147,54 @@ STRICT RULES:
 """
 
 
+def _repair_json(raw: str) -> dict:
+    """Best-effort JSON repair: strip markdown, extract {...}, fix trailing commas."""
+    # 1. Strip markdown code fences
+    text = re.sub(r"```(?:json)?\s*", "", raw).replace("```", "").strip()
+    # 2. Extract first {...} block (ignore any prose before/after)
+    m = re.search(r"\{.*\}", text, re.DOTALL)
+    if not m:
+        raise ValueError("No JSON object found in response")
+    text = m.group(0)
+    # 3. Remove trailing commas before } or ]
+    text = re.sub(r",\s*([}\]])", r"\1", text)
+    # 4. Replace smart quotes
+    text = text.replace("\u201c", '"').replace("\u201d", '"').replace("\u2018", "'").replace("\u2019", "'")
+    return json.loads(text)
+
+
 def _llm_json_pass(system_prompt: str, user_content: str, api_key: str = None) -> tuple[dict, int]:
-    """Call LLM expecting a JSON response. Returns (parsed_dict, tokens)."""
+    """Call LLM expecting a JSON response. Returns (parsed_dict, tokens).
+    Uses strict JSON mode + repair + 3-attempt retry for robustness."""
     kwargs = {
         "model": DEFAULT_MODEL,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_content}
         ],
-        "temperature": 0.05,
+        "temperature": 0,
         "response_format": {"type": "json_object"}
     }
     if api_key:
         kwargs["api_key"] = api_key
 
-    response = safe_chat_completion(**kwargs)
-    content = response.choices[0].message.content.strip()
-    tokens = response.usage.total_tokens if getattr(response, "usage", None) else 0
-    return json.loads(content), tokens
+    last_err = None
+    total_tokens = 0
+    for attempt in range(3):
+        try:
+            response = safe_chat_completion(**kwargs)
+            content = response.choices[0].message.content.strip()
+            total_tokens = response.usage.total_tokens if getattr(response, "usage", None) else 0
+            # Try direct parse first, then repair
+            try:
+                return json.loads(content), total_tokens
+            except json.JSONDecodeError:
+                return _repair_json(content), total_tokens
+        except Exception as e:
+            last_err = e
+            if attempt < 2:
+                import time; time.sleep(1)
+    raise RuntimeError(f"JSON pass failed after 3 attempts: {last_err}")
 
 
 def _normalize(name: str) -> str:

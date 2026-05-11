@@ -115,8 +115,12 @@ def check_and_update_tokens(email: str, tokens_consumed: int,
 
     # Read-only check (pass 0 to just verify quota without consuming)
     if tokens_consumed == 0:
+        over_limit = current_used >= limit
+        if over_limit and not is_blocked:
+            # Sync the is_blocked flag in DB so future calls are faster
+            _users_col.update_one({"email": email}, {"$set": {"is_blocked": True}})
         return {
-            "blocked":     False,
+            "blocked":     over_limit,
             "tokens_used": current_used,
             "token_limit": limit,
             "remaining":   max(0, limit - current_used),

@@ -1,5 +1,4 @@
 /* plc_generator_v2.css - Unified industrial theme aligned with HMI */
-@import './responsive-modal.css';
 
 .plc-section-v2 {
   --plc-bg-dark: var(--bg-primary);

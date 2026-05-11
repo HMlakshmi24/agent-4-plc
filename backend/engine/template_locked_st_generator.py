@@ -138,37 +138,155 @@ def _pick_signal(signal_map: dict, contains_any: list[str]) -> str | None:
     return None
 
 def _fallback_state_cases(control_model: dict, signal_map: dict) -> str:
-    states = control_model.get("states", []) if control_model else []
-    idle_id = _pick_state_id(states, ["IDLE"], 0)
-    start_id = _pick_state_id(states, ["START", "STARTING"], 1)
-    run_id = _pick_state_id(states, ["RUN", "RUNNING", "ACTIVE", "OPERAT"], 1)
-    fault_id = _pick_state_id(states, ["FAULT", "ERROR", "ALARM", "TRIP", "FAIL"], 99)
+    """
+    Generate CASE bodies from the actual control model states and transitions.
+    Uses every state extracted by Stage 1, not just generic 0/1/99.
+    """
+    states      = control_model.get("states",      []) if control_model else []
+    transitions = control_model.get("transitions",  []) if control_model else []
 
-    start_sig = _pick_signal(signal_map, ["START", "RUN", "ENABLE"])
-    stop_sig = _pick_signal(signal_map, ["STOP", "RESET", "HALT"])
-    fault_sig = _pick_signal(signal_map, ["FAULT", "TRIP", "OVERLOAD", "ESTOP", "E_STOP", "EMERGENCY"])
+    # --- Helper: find stop/reset signal ---
+    stop_sig  = _pick_signal(signal_map, ["STOP", "RESET", "HALT"])
     reset_sig = _pick_signal(signal_map, ["RESET", "ACK", "CLEAR"])
-
-    start_trig = f"{start_sig}_Trig.Q" if start_sig else "FALSE"
-    stop_trig = f"{stop_sig}_Trig.Q" if stop_sig else "FALSE"
+    stop_trig  = f"{stop_sig}_Trig.Q"  if stop_sig  else "FALSE"
     reset_trig = f"{reset_sig}_Trig.Q" if reset_sig else stop_trig
-    timers = signal_map.get("timers", []) if signal_map else []
-    start_done = f"{_name(timers[0])}.Q" if timers else start_trig
+
+    # --- Build a lookup: state_id → state dict ---
+    state_by_id = {}
+    for s in states:
+        if isinstance(s, dict):
+            sid = s.get("id", 0)
+            state_by_id[sid] = s
+
+    # --- Build transition lookup: from_state_id → list of (condition, to_id) ---
+    trans_by_state: dict[int, list[tuple[str, int]]] = {}
+    for t in transitions:
+        fid = t.get("from_state_id", t.get("from", -1))
+        tid = t.get("to_state_id",   t.get("to",   -1))
+        cond_raw = t.get("condition", t.get("event", t.get("trigger", "")))
+        # Convert condition to valid ST expression using known signal names
+        cond = _cond_to_st(str(cond_raw), signal_map)
+        if fid != -1 and tid != -1 and cond:
+            trans_by_state.setdefault(fid, []).append((cond, tid))
+
+    # --- Identify fault state ---
+    fault_id = 99
+    for s in states:
+        if isinstance(s, dict):
+            sname = s.get("name", "")
+            if any(kw in sname.upper() for kw in ("FAULT", "ERROR", "FAIL", "TRIP")):
+                fault_id = s.get("id", 99)
+                break
+
+    # --- Identify idle state ---
+    idle_id = 0
+    for s in states:
+        if isinstance(s, dict) and "IDLE" in s.get("name", "").upper():
+            idle_id = s.get("id", 0)
+            break
 
     lines = []
-    lines += [f"{idle_id}: (* IDLE *)",
-              f"    IF {start_trig} THEN M_State := {start_id}; END_IF;"]
-    if start_id != run_id:
-        lines += [f"{start_id}: (* STARTING *)",
-                  f"    IF {start_done} THEN M_State := {run_id}; END_IF;"]
-    lines += [f"{run_id}: (* RUNNING *)",
-              f"    IF {stop_trig} THEN M_State := {idle_id}; END_IF;"]
-    if fault_sig:
-        lines += [f"    IF {fault_sig} THEN M_FaultCode := 1; M_State := {fault_id}; END_IF;"]
-    lines += [f"{fault_id}: (* FAULT *)",
-              f"    M_FaultCode := M_FaultCode; (* Latched *)",
-              f"    IF {reset_trig} THEN M_FaultCode := 0; M_State := {idle_id}; END_IF;"]
-    return "\n".join(lines)
+
+    # If we have enough state info, use it
+    if len(states) >= 2:
+        for s in sorted(states, key=lambda x: x.get("id", 0) if isinstance(x, dict) else 0):
+            if not isinstance(s, dict):
+                continue
+            sid   = s.get("id", 0)
+            sname = s.get("name", f"State{sid}").upper()
+            desc  = s.get("name", f"State{sid}")
+            lines.append(f"{sid}: (* {desc} *)")
+
+            trans = trans_by_state.get(sid, [])
+
+            if "IDLE" in sname:
+                # Idle: go to first active state on first available transition
+                if trans:
+                    for cond, tid in trans:
+                        lines.append(f"    IF {cond} THEN M_State := {tid}; END_IF;")
+                else:
+                    start_sig = _pick_signal(signal_map, ["START", "RUN", "ENABLE"])
+                    start_trig = f"{start_sig}_Trig.Q" if start_sig else "FALSE"
+                    next_id = next((s2.get("id", 1) for s2 in states
+                                    if isinstance(s2, dict) and s2.get("id", 0) not in (idle_id, fault_id)), 1)
+                    lines.append(f"    IF {start_trig} THEN M_State := {next_id}; END_IF;")
+
+            elif any(kw in sname for kw in ("FAULT", "ERROR", "FAIL", "TRIP")):
+                # Fault: stay latched, reset on stop/reset
+                lines.append(f"    M_FaultCode := M_FaultCode; (* Latched *)")
+                lines.append(f"    IF {reset_trig} THEN M_FaultCode := 0; M_State := {idle_id}; END_IF;")
+
+            else:
+                # Active state: first check stop, then model transitions, then timer
+                lines.append(f"    IF {stop_trig} THEN M_State := {idle_id};")
+                if trans:
+                    for cond, tid in trans:
+                        lines.append(f"    ELSIF {cond} THEN M_State := {tid};")
+                timers = signal_map.get("timers", [])
+                if timers:
+                    t0 = _name(timers[0])
+                    t0 = t0 if t0.startswith("T_") else f"T_{t0}"
+                    lines.append(f"    ELSIF {t0}.Q THEN M_State := {idle_id};")
+                lines.append(f"    END_IF;")
+
+            lines.append("")
+
+    else:
+        # Absolute last resort — generic 3-state
+        start_sig = _pick_signal(signal_map, ["START", "RUN", "ENABLE"])
+        fault_sig = _pick_signal(signal_map, ["FAULT", "TRIP", "OVERLOAD", "ESTOP"])
+        start_trig = f"{start_sig}_Trig.Q" if start_sig else "FALSE"
+        lines += [
+            f"0: (* IDLE *)",
+            f"    IF {start_trig} THEN M_State := 1; END_IF;",
+            "",
+            f"1: (* RUNNING *)",
+            f"    IF {stop_trig} THEN M_State := 0; END_IF;",
+            f"    IF {fault_sig} THEN M_FaultCode := 1; M_State := 99; END_IF;" if fault_sig else "",
+            "",
+            f"99: (* FAULT *)",
+            f"    M_FaultCode := M_FaultCode;",
+            f"    IF {reset_trig} THEN M_FaultCode := 0; M_State := 0; END_IF;",
+        ]
+
+    return "\n".join(l for l in lines if l is not None)
+
+
+def _cond_to_st(raw: str, signal_map: dict) -> str:
+    """Convert a natural-language or partial condition to a valid ST expression."""
+    raw = raw.strip()
+    if not raw or raw in ("None", "null", ""):
+        return ""
+    # Already looks like ST
+    if re.search(r"\.\w+|:=|AND|OR|NOT|\bTRUE\b|\bFALSE\b", raw, re.IGNORECASE):
+        return raw
+    # Could be a signal name — check if known
+    all_signals = []
+    for key in ("inputs", "outputs", "events", "safety_conditions"):
+        all_signals += [_name(s) for s in signal_map.get(key, [])]
+    # Try to match to a known signal
+    raw_up = raw.upper()
+    for sig in all_signals:
+        if sig and sig.upper() in raw_up:
+            if any(kw in raw_up for kw in ("PRESS", "PUSH", "TRIG", "CLICK", "DETECT")):
+                return f"{sig}_Trig.Q"
+            return sig
+    # Keyword → signal heuristics
+    if any(kw in raw_up for kw in ("START", "ENABLE", "RUN")):
+        s = _pick_signal(signal_map, ["START", "ENABLE", "RUN"])
+        return f"{s}_Trig.Q" if s else ""
+    if any(kw in raw_up for kw in ("STOP", "HALT")):
+        s = _pick_signal(signal_map, ["STOP", "HALT"])
+        return f"{s}_Trig.Q" if s else ""
+    if any(kw in raw_up for kw in ("FLOOR", "ARRIVE", "AT_FLOOR", "SENSOR")):
+        s = _pick_signal(signal_map, ["FLOOR", "SENSOR", "LIMIT"])
+        return s if s else ""
+    if any(kw in raw_up for kw in ("TIMER", "TIMEOUT", "ELAPSED")):
+        timers = signal_map.get("timers", [])
+        if timers:
+            t0 = _name(timers[0])
+            return f"{t0}.Q" if t0.startswith("T_") else f"T_{t0}.Q"
+    return raw  # pass through as-is
 
 def _fallback_output_assignments(signal_map: dict, control_model: dict) -> str:
     outputs = signal_map.get("outputs", []) if signal_map else []
@@ -571,21 +689,33 @@ class TemplateLockedSTGenerator:
         )
 
     def _gen_state_cases(self, control_model: dict, signal_map: dict, allowed: set[str], api_key: str = None) -> tuple[str, int]:
+        expected_states = control_model.get("states", [])
+        fallback = _fallback_state_cases(control_model, signal_map)
+
         user_content = json.dumps({
-            "states":            control_model.get("states", []),
+            "states":            expected_states,
             "transitions":       control_model.get("transitions", []),
             "actions":           control_model.get("actions", []),
             "FAULT_CODES":       control_model.get("fault_codes", {}),
-            "LOCKED_STATES":     control_model.get("states", []),
+            "LOCKED_STATES":     expected_states,
             "ALLOWED_VARIABLES": sorted(allowed | {"M_FaultCode"})
         })
-        return self._guard_call(
+        fragment, tokens = self._guard_call(
             _STATE_CASES_SYSTEM, user_content, allowed | {"M_FaultCode"},
-            fallback_stub=_fallback_state_cases(control_model, signal_map),
+            fallback_stub=fallback,
             api_key=api_key,
-            forbid_output_writes=True,   # Rule 2: state fragment cannot write Q_
-            forbid_timer_calls=True      # Rule 1: timers locked to template
+            forbid_output_writes=True,
+            forbid_timer_calls=True
         )
+
+        # Sparsity check: if LLM returned fewer state blocks than expected, use fallback
+        expected_count = len(expected_states)
+        actual_count   = len(re.findall(r"^\s*\d+\s*:", fragment, re.MULTILINE))
+        if expected_count > 1 and actual_count < max(2, expected_count - 1):
+            print(f"       State cases sparse ({actual_count}/{expected_count} states found) — using fallback.")
+            return fallback, tokens
+
+        return fragment, tokens
 
     def _gen_output_assignments(self, signal_map: dict, control_model: dict, allowed: set[str], api_key: str = None) -> tuple[str, int]:
         outputs = signal_map.get("outputs", [])

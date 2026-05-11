@@ -40,8 +40,8 @@ class IndustrialIECValidator:
         if var_sections > 6:
             errors.append("Too many VAR sections")
 
-        # Rule 6: Illegal keyword
-        if " IEC" in U or U.startswith("IEC"):
+        # Rule 6: Illegal keyword — check comment-stripped code only so "(* IEC 61131-3 *)" doesn't fire
+        if " IEC" in U_no_comments or U_no_comments.startswith("IEC"):
             errors.append("Illegal keyword 'iec' found")
 
         # Rule 7: Timer Q assignment

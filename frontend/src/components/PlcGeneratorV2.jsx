@@ -3,11 +3,31 @@ import { motion, AnimatePresence } from "framer-motion";
 import "./plc_generator_v2.css";
 import { API } from '../config/api';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import LadderView from './LadderView';
 
 
 const PlcGeneratorV2 = () => {
   const { theme } = useTheme();
+  const { user: authUser } = useAuth();   // single source of truth for email
+
+  /** Always-fresh auth headers — email from AuthContext with localStorage fallbacks */
+  const getAuthHeaders = (extra = {}) => {
+    const token = localStorage.getItem("automind_token") || localStorage.getItem("token");
+    const h = { ...extra };
+    if (token && !token.startsWith("mock-")) h["Authorization"] = `Bearer ${token}`;
+
+    // Resolve email: AuthContext first, then multiple localStorage fallback keys
+    let email = authUser?.email;
+    if (!email) {
+      try { email = JSON.parse(localStorage.getItem("user_details") || "{}").email; } catch {}
+    }
+    if (!email) {
+      try { email = JSON.parse(localStorage.getItem("automind_user") || "{}").email; } catch {}
+    }
+    if (email) h["X-User-Email"] = email;
+    return h;
+  };
 
   const [showModal, setShowModal] = useState(false);
   const [requirement, setRequirement] = useState("");
@@ -18,20 +38,24 @@ const PlcGeneratorV2 = () => {
   const [generatedCode, setGeneratedCode] = useState(null);
   const [editedCode, setEditedCode] = useState(""); // User can edit code
   const [isEditing, setIsEditing] = useState(false); // Toggle edit mode
-  const [showPreview, setShowPreview] = useState(false);
+
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [codeHistory, setCodeHistory] = useState([]); // Keep history visible
   const [quotaExceeded, setQuotaExceeded] = useState(false);
+  const [apiKey, setApiKey] = useState(localStorage.getItem("automind_api_key") || "");
+  const [ioTags, setIoTags] = useState(null);       // parsed tag list from CSV upload
+  const [ioFileName, setIoFileName] = useState(""); // display name of uploaded file
+
+  // Document upload (PDF / DOCX / XLSX / JSON)
+  const [docFileName, setDocFileName]   = useState("");
+  const [docParsing, setDocParsing]     = useState(false);
+  const [docError, setDocError]         = useState("");
 
   // Fetch History on Mount
   React.useEffect(() => {
     const fetchHistory = async () => {
-      const token = localStorage.getItem("automind_token") || localStorage.getItem("token");
-      const user = JSON.parse(localStorage.getItem("automind_user") || localStorage.getItem("user_details") || "{}");
-      if (!token) return;
-
-      const headers = { Authorization: `Bearer ${token}` };
-      if (user.email) headers["X-User-Email"] = user.email;
+      const headers = getAuthHeaders();
+      if (!headers["Authorization"]) return;
 
       try {
         const res = await fetch(`${API}/history/`, { headers });
@@ -79,11 +103,7 @@ const PlcGeneratorV2 = () => {
       let data;
       let result;
 
-      const token = localStorage.getItem("automind_token") || localStorage.getItem("token");
-      const user = JSON.parse(localStorage.getItem("automind_user") || "{}");
-      const headers = { "Content-Type": "application/json" };
-      if (token && !token.startsWith("mock-")) headers["Authorization"] = `Bearer ${token}`;
-      if (user.email) headers["X-User-Email"] = user.email;
+      const headers = getAuthHeaders({ "Content-Type": "application/json" });
 
       if (language === 'LD') {
         const response = await fetch(`${API}/generate-ld`, {
@@ -106,15 +126,22 @@ const PlcGeneratorV2 = () => {
 
       } else {
         // Use new production endpoint for ST
+        // Persist API key locally for convenience
+        if (apiKey) localStorage.setItem("automind_api_key", apiKey);
+
+        const body = {
+          brand: plcBrand,
+          language: language,
+          program_name: programName,
+          description: requirement.trim(),
+        };
+        if (apiKey) body.api_key = apiKey;
+        if (ioTags) body.io_map = { tags: ioTags, vendor: plcBrand.toUpperCase() };
+
         const response = await fetch(`${API}/generate`, {
           method: "POST",
           headers: headers,
-          body: JSON.stringify({
-            brand: plcBrand,
-            language: language,
-            program_name: programName,
-            description: requirement.trim()
-          }),
+          body: JSON.stringify(body),
         });
 
         if (!response.ok) {
@@ -136,21 +163,44 @@ const PlcGeneratorV2 = () => {
         }
         data = await response.json();
 
+        // Backend says description needs clarification — show questions, don't blank the screen
+        if (data.clarification_needed) {
+          const qs = (data.questions || []).map((q, i) => `${i + 1}. ${q}`).join('\n');
+          alert(
+            `Your description needs more detail before code can be generated.\n\n` +
+            `Please answer these questions in the description box:\n\n${qs || 'Add more specific I/O signals, states, and control logic.'}`
+          );
+          setLoading(false);
+          return;
+        }
+
+        if (!data.code || !data.code.trim()) {
+          throw new Error("Backend returned empty code. Please add more detail to your description.");
+        }
+
         result = {
           code: data.code,
           language: data.language || language,
-          validated: true, // Backend guarantees validity now
+          validated: true,
           timestamp: new Date().toISOString(),
           explanation: "Generated by Industrial Engine",
-          warnings: data.fixes_applied || []
+          warnings: data.fixes_applied || [],
+          iec_valid: data.iec_valid,
+          iec_errors: data.iec_errors || [],
+          domain: data.domain,
+          tokens_used: data.tokens_used || 0,
+          tag_list: data.tag_list || [],
         };
       }
 
       setGeneratedCode(result);
       setEditedCode(result.code);
       setIsEditing(false);
-      setShowPreview(true);
+      
       setShowModal(false);
+
+      // Notify TokenCircle to refresh immediately after generation
+      window.dispatchEvent(new CustomEvent('plc:generation_done'));
 
       setCodeHistory(prev => [{
         id: Date.now(),
@@ -163,8 +213,7 @@ const PlcGeneratorV2 = () => {
       }, ...prev]);
 
       // Save to Backend (Fire and Forget)
-      if (token) {
-
+      if (headers["Authorization"]) {
         fetch(`${API}/history/`, {
           method: "POST",
           headers: headers,
@@ -226,12 +275,128 @@ const PlcGeneratorV2 = () => {
   const handleClearHistory = () => {
     setCodeHistory([]);
     setGeneratedCode(null);
-    setShowPreview(false);
+    
     setRequirement("");
   };
 
-  const handleTryNow = () => {
-    setShowModal(true);
+  const handleTryNow = () => setShowModal(true);
+
+  // Keep the raw File object so we can send it to /generate endpoint
+  const [docFileObj, setDocFileObj] = useState(null);
+
+  const handleDocUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setDocFileObj(file);
+    setDocFileName(file.name);
+    setDocError("");
+    // Reset input so same file can be re-uploaded
+    e.target.value = "";
+  };
+
+  const handleGenerateFromFile = async () => {
+    if (!docFileObj) return;
+    if (!programName.trim()) return alert("Please enter a program name!");
+
+    setLoading(true);
+    setDocParsing(true);
+    try {
+      const headers = getAuthHeaders();
+
+      // Pre-flight quota check
+      if (authUser?.email) {
+        const chk = await fetch(`${API}/api/user/usage`, { headers });
+        if (chk.ok) {
+          const chkData = await chk.json();
+          if (chkData.is_blocked) {
+            setQuotaExceeded(true);
+            setShowModal(false);
+            return;
+          }
+        }
+      }
+
+      const formData = new FormData();
+      formData.append("file",         docFileObj);
+      formData.append("program_name", programName);
+      formData.append("brand",        plcBrand);
+      // Send typed requirements alongside the file so both are used together
+      if (requirement && requirement.trim()) formData.append("description", requirement.trim());
+      // Also send email in form body as backup (some proxies strip custom headers)
+      if (authUser?.email) formData.append("user_email", authUser.email);
+
+      const res = await fetch(`${API}/api/documents/generate`, {
+        method: "POST",
+        headers,
+        body:   formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 403) { setQuotaExceeded(true); setShowModal(false); return; }
+        throw new Error(data.detail || "Generation failed");
+      }
+
+      const result = {
+        code:         data.code,
+        language:     "ST",
+        validated:    true,
+        timestamp:    new Date().toISOString(),
+        explanation:  `Generated directly from ${docFileObj.name} (${data.file_type}) — ${data.tags_found} tags extracted`,
+        warnings:     data.iec_warnings || [],
+        iec_valid:    data.iec_valid,
+        iec_errors:   data.iec_errors || [],
+        domain:       data.domain,
+        tokens_used:  data.tokens_used || 0,
+        tag_list:     data.tag_list || [],
+      };
+
+      setGeneratedCode(result);
+      setEditedCode(result.code);
+      setIsEditing(false);
+      
+      setShowModal(false);
+      window.dispatchEvent(new CustomEvent('plc:generation_done'));
+
+      setCodeHistory(prev => [{
+        id: Date.now(),
+        requirement: `[File: ${docFileObj.name}]`,
+        programName,
+        language: "ST",
+        brand: plcBrand,
+        code: result.code,
+        timestamp: new Date().toLocaleTimeString()
+      }, ...prev]);
+
+    } catch (err) {
+      setDocError(err.message || "Generation from file failed");
+    } finally {
+      setLoading(false);
+      setDocParsing(false);
+    }
+  };
+
+  const handleIoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIoFileName(file.name);
+    const text = await file.text();
+    try {
+      const res = await fetch(`${API}/api/io/parse-csv`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ csv_text: text, vendor: plcBrand.toUpperCase() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIoTags(data.tags);
+        alert(`I/O List loaded: ${data.count} tags (${data.inputs.length} inputs, ${data.outputs.length} outputs)`);
+      } else {
+        alert("CSV parse error: " + (data.detail || "Unknown error"));
+      }
+    } catch {
+      alert("Failed to parse CSV. Check format.");
+    }
   };
 
   return (
@@ -376,7 +541,7 @@ const PlcGeneratorV2 = () => {
                       });
                       setEditedCode(item.code);
                       setIsEditing(false);
-                      setShowPreview(true);
+                      
                       setProgramName(item.programName);
                     }} style={{
                       background: theme === 'dark' ? 'rgba(15, 23, 42, 0.6)' : 'white',
@@ -443,6 +608,94 @@ const PlcGeneratorV2 = () => {
                     </div>
                   )}
                 </div>
+
+                {/* IEC validation badge */}
+                <div style={{ display: 'flex', gap: '10px', margin: '8px 0', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600',
+                    background: generatedCode.iec_valid ? '#16a34a22' : '#dc262622',
+                    color: generatedCode.iec_valid ? '#16a34a' : '#dc2626',
+                    border: `1px solid ${generatedCode.iec_valid ? '#16a34a' : '#dc2626'}` }}>
+                    {generatedCode.iec_valid ? '✓ IEC 61131-3 Valid' : '⚠ IEC Warnings'}
+                  </span>
+                  {generatedCode.tokens_used > 0 && (
+                    <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '12px',
+                      background: '#0ea5e922', color: '#0ea5e9', border: '1px solid #0ea5e9' }}>
+                      {generatedCode.tokens_used.toLocaleString()} tokens
+                    </span>
+                  )}
+                  {generatedCode.domain && (
+                    <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '11px',
+                      background: '#64748b22', color: '#94a3b8', border: '1px solid #334155' }}>
+                      {generatedCode.domain}
+                    </span>
+                  )}
+                </div>
+
+                {/* Tag Table */}
+                {generatedCode.tag_list && generatedCode.tag_list.length > 0 && (
+                  <div style={{ margin: '12px 0', borderRadius: '8px', overflow: 'hidden',
+                    border: theme === 'dark' ? '1px solid #334155' : '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '8px 12px', background: theme === 'dark' ? '#1e293b' : '#f1f5f9' }}>
+                      <span style={{ fontWeight: '600', fontSize: '13px' }}>
+                        I/O Tag List ({generatedCode.tag_list.length} tags)
+                      </span>
+                      <button onClick={() => {
+                        const csv = ['Tag,Address,Type,Direction,Signal Type,Voltage,Terminal,Description',
+                          ...generatedCode.tag_list.map(t =>
+                            `${t.tag},${t.address},${t.type},${t.direction},${t.signal_type||'NO'},${t.voltage||'24VDC'},${t.terminal||''},${t.description}`)
+                        ].join('\n');
+                        const blob = new Blob([csv], { type: 'text/csv' });
+                        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+                        a.download = `${programName}_TagList.csv`; a.click();
+                      }} style={{ padding: '3px 10px', background: '#0ea5e9', color: 'white',
+                        border: 'none', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}>
+                        Export CSV
+                      </button>
+                    </div>
+                    <div style={{ overflowX: 'auto', maxHeight: '220px', overflowY: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+                        <thead>
+                          <tr style={{ background: theme === 'dark' ? '#0f172a' : '#e2e8f0', position: 'sticky', top: 0 }}>
+                            {['Tag', 'Address', 'Dir', 'Signal', 'Voltage', 'Terminal', 'Description'].map(h => (
+                              <th key={h} style={{ padding: '5px 8px', textAlign: 'left',
+                                borderBottom: '1px solid #334155', whiteSpace: 'nowrap', fontWeight: '600' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {generatedCode.tag_list.map((row, i) => (
+                            <tr key={i} style={{ background: i % 2 === 0
+                              ? (theme === 'dark' ? '#1e293b44' : '#f8fafc')
+                              : 'transparent' }}>
+                              <td style={{ padding: '4px 8px', fontFamily: 'monospace', fontWeight: '600',
+                                color: row.direction === 'INPUT' ? '#38bdf8' : '#4ade80' }}>{row.tag}</td>
+                              <td style={{ padding: '4px 8px', fontFamily: 'monospace', color: '#f59e0b' }}>{row.address}</td>
+                              <td style={{ padding: '4px 8px' }}>
+                                <span style={{ padding: '1px 5px', borderRadius: '6px', fontSize: '10px',
+                                  background: row.direction === 'INPUT' ? '#0ea5e922' : '#16a34a22',
+                                  color: row.direction === 'INPUT' ? '#38bdf8' : '#4ade80' }}>
+                                  {row.direction}
+                                </span>
+                              </td>
+                              <td style={{ padding: '4px 8px' }}>
+                                <span style={{ padding: '1px 5px', borderRadius: '6px', fontSize: '10px',
+                                  background: row.signal_type === 'NC' ? '#ef444422' : '#64748b22',
+                                  color: row.signal_type === 'NC' ? '#ef4444' : '#94a3b8',
+                                  fontWeight: row.signal_type === 'NC' ? '700' : '400' }}>
+                                  {row.signal_type || 'NO'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '4px 8px', color: '#94a3b8', fontSize: '10px' }}>{row.voltage || '24VDC'}</td>
+                              <td style={{ padding: '4px 8px', fontFamily: 'monospace', color: '#c084fc', fontSize: '10px' }}>{row.terminal || '—'}</td>
+                              <td style={{ padding: '4px 8px', color: theme === 'dark' ? '#94a3b8' : '#64748b' }}>{row.description}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
 
                 <div className="preview-actions" style={{ marginTop: '10px' }}>
                   <button className="download-btn" onClick={handleDownload}>💾 Download .html</button>
@@ -512,6 +765,92 @@ const PlcGeneratorV2 = () => {
                   </div>
                 </div>
 
+                {/* ── Document Upload ── */}
+                <div className="input-group">
+                  <label>
+                    Upload Spec Document
+                    <span style={{ fontWeight: 400, fontSize: '0.8em', opacity: 0.6, marginLeft: 6 }}>
+                      (PDF, Word, Excel, HMI JSON — AI reads & extracts requirements)
+                    </span>
+                  </label>
+
+                  <label style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '14px 18px', borderRadius: 8, cursor: 'pointer',
+                    border: docFileName
+                      ? '1.5px solid #10b981'
+                      : docError
+                        ? '1.5px solid #ef4444'
+                        : '1.5px dashed rgba(14,165,233,0.45)',
+                    background: docFileName
+                      ? 'rgba(16,185,129,0.08)'
+                      : docError
+                        ? 'rgba(239,68,68,0.06)'
+                        : 'rgba(14,165,233,0.05)',
+                    transition: 'all 0.2s',
+                  }}>
+                    {/* File type icons */}
+                    <span style={{ fontSize: 22, lineHeight: 1 }}>
+                      {docParsing ? '⏳' : docFileName ? '✅' : docError ? '❌' : '📂'}
+                    </span>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {docParsing ? (
+                        <span style={{ color: '#0ea5e9', fontWeight: 600 }}>
+                          Analysing document… AI is extracting requirements
+                        </span>
+                      ) : docFileName ? (
+                        <span style={{ color: '#10b981', fontWeight: 600, fontSize: '0.9em' }}>
+                          {docFileName} — click the green button below to generate
+                        </span>
+                      ) : docError ? (
+                        <span style={{ color: '#ef4444', fontSize: '0.85em' }}>{docError}</span>
+                      ) : (
+                        <span style={{ color: '#64748b', fontSize: '0.9em' }}>
+                          Click to upload&nbsp;
+                          <strong style={{ color: '#0ea5e9' }}>PDF</strong>,&nbsp;
+                          <strong style={{ color: '#0ea5e9' }}>Word (.docx)</strong>,&nbsp;
+                          <strong style={{ color: '#0ea5e9' }}>Excel (.xlsx)</strong>,&nbsp;
+                          <strong style={{ color: '#0ea5e9' }}>HMI JSON</strong>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Supported-type badges */}
+                    {!docFileName && !docParsing && !docError && (
+                      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                        {['PDF', 'DOCX', 'XLSX', 'JSON'].map(t => (
+                          <span key={t} style={{
+                            fontSize: 9, fontWeight: 700, padding: '2px 5px',
+                            borderRadius: 4, background: 'rgba(14,165,233,0.15)',
+                            color: '#38bdf8', border: '1px solid rgba(14,165,233,0.3)',
+                          }}>{t}</span>
+                        ))}
+                      </div>
+                    )}
+
+                    {docFileName && !docParsing && (
+                      <button
+                        onClick={e => { e.preventDefault(); setDocFileName(""); setDocError(""); setDocFileObj(null); }}
+                        style={{
+                          background: 'rgba(100,116,139,0.15)', border: '1px solid rgba(100,116,139,0.3)',
+                          color: '#94a3b8', cursor: 'pointer', fontSize: 11, padding: '3px 8px',
+                          borderRadius: 5, fontWeight: 600, flexShrink: 0,
+                        }}
+                        title="Remove file and choose a different one"
+                      >Change file</button>
+                    )}
+
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.json"
+                      onChange={handleDocUpload}
+                      disabled={docParsing}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                </div>
+
                 <div className="input-group">
                   <label>System Description</label>
                   <textarea
@@ -523,16 +862,85 @@ const PlcGeneratorV2 = () => {
                         handleGenerate();
                       }
                     }}
-                    placeholder="Describe inputs, outputs, and logic (e.g. 'Turn on motor M1 when Start button is pressed...')"
+                    placeholder={`Describe your system clearly. Example:\n\nConveyor motor with 5 second start delay.\nInputs: Start button (NO), Stop button (NO), E-Stop (NC), thermal overload (NC), reset button.\nOutput: conveyor motor contactor.\nMotor starts after 5s delay. E-Stop latches fault until reset.`}
                     className="requirement-textarea"
                   />
                 </div>
 
-                <div className="modal-actions" style={{ background: theme === 'dark' ? '#1e293b' : '#f8fafc' }}>
-                  <button className="btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                  <button className="btn-primary" onClick={handleGenerate} disabled={loading}>
-                    {loading ? "Generating..." : "Compile & Generate"}
-                  </button>
+                {/* I/O Tag List Upload */}
+                <div className="input-group">
+                  <label>I/O Tag List <span style={{ fontWeight: 400, fontSize: '0.8em', opacity: 0.6 }}>(optional CSV — maps hardware addresses)</span></label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <label style={{
+                      padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9em',
+                      background: ioTags ? 'rgba(16,185,129,0.15)' : 'rgba(14,165,233,0.1)',
+                      border: ioTags ? '1px solid #10b981' : '1px solid rgba(14,165,233,0.3)',
+                      color: ioTags ? '#10b981' : '#0ea5e9',
+                    }}>
+                      {ioTags ? `✓ ${ioFileName}` : '↑ Upload CSV'}
+                      <input type="file" accept=".csv" onChange={handleIoUpload} style={{ display: 'none' }} />
+                    </label>
+                    {ioTags && (
+                      <button onClick={() => { setIoTags(null); setIoFileName(""); }}
+                        style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.85em' }}>
+                        ✕ Remove
+                      </button>
+                    )}
+                    <span style={{ fontSize: '0.75em', opacity: 0.5 }}>
+                      Columns: name, address, type, direction, description
+                    </span>
+                  </div>
+                </div>
+
+                {/* Claude / Anthropic API Key */}
+                <div className="input-group">
+                  <label>AI API Key <span style={{ fontWeight: 400, fontSize: '0.8em', opacity: 0.6 }}>(optional — use your own Claude/GPT key)</span></label>
+                  <input
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder="sk-ant-... or sk-..."
+                    className="modal-input"
+                    style={{ fontFamily: 'monospace', letterSpacing: apiKey ? '0.1em' : 'normal' }}
+                  />
+                  {apiKey && (
+                    <span style={{ fontSize: '0.75em', color: apiKey.startsWith('sk-ant-') ? '#10b981' : '#f59e0b', marginTop: '4px', display: 'block' }}>
+                      {apiKey.startsWith('sk-ant-') ? '✓ Claude (Anthropic) — best quality' : '⚡ OpenAI / GPT key detected'}
+                    </span>
+                  )}
+                </div>
+
+                <div className="modal-actions" style={{ background: theme === 'dark' ? '#1e293b' : '#f8fafc', flexDirection: 'column', gap: 10 }}>
+                  {/* Generate from File — primary when file is loaded */}
+                  {docFileObj && (
+                    <button
+                      className="btn-primary"
+                      onClick={handleGenerateFromFile}
+                      disabled={loading}
+                      style={{ background: 'linear-gradient(135deg, #10b981, #059669)', width: '100%' }}
+                    >
+                      {loading && docParsing
+                        ? <><span className="spinner" />  Analysing file & generating code…</>
+                        : `⚡ Generate IEC Code from ${docFileName}`}
+                    </button>
+                  )}
+
+                  {/* Separator */}
+                  {docFileObj && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
+                      <div style={{ flex: 1, height: 1, background: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }} />
+                      <span style={{ fontSize: 11, color: '#64748b' }}>or type a description below</span>
+                      <div style={{ flex: 1, height: 1, background: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }} />
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+                    <button className="btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+                    <button className="btn-primary" onClick={handleGenerate} disabled={loading}
+                      style={{ opacity: docFileObj ? 0.75 : 1 }}>
+                      {loading && !docParsing ? "Generating…" : "Compile & Generate"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>

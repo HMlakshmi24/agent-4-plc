@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import useMachineState from './useMachineState';
 
 // ─── Inject keyframe animations once ─────────────────────────────────────────
-if (!document.getElementById('_hmi_kf')) {
+if (typeof document !== 'undefined' && !document.getElementById('_hmi_kf')) {
     const s = document.createElement('style');
     s.id = '_hmi_kf';
     s.textContent = `
@@ -167,7 +167,7 @@ function HMI_Tank({ c, running }) {
         const id = setInterval(() =>
             setLv(v => +Math.max(5, Math.min(95, v + (Math.random() - 0.5) * 2.2)).toFixed(1)), 1800);
         return () => clearInterval(id);
-    }, [running]);
+    }, [c.value, running]);
     const col = vCol(lv);
     const tW = 80, tH = 130, eRY = 10;
     const fH = (tH - 2 * eRY) * Math.max(0.03, lv / 100);
@@ -283,7 +283,7 @@ function HMI_Motor({ c, running }) {
         const base = +(c.value ?? 1450);
         const id = setInterval(() => setRpm(+(base * (0.92 + Math.random() * 0.1)).toFixed(0)), 1500);
         return () => clearInterval(id);
-    }, [on, running]);
+    }, [c.value, on, running]);
     const col = on && running ? '#2ecc71' : '#e74c3c';
     return (
         <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center', cursor: 'pointer' }}
@@ -405,7 +405,7 @@ function HMI_Gauge({ c, running }) {
         const id = setInterval(() =>
             setVal(+(base * (0.88 + Math.random() * 0.24)).toFixed(1)), 2000);
         return () => clearInterval(id);
-    }, [running]);
+    }, [c.value, running]);
     const mx = c.max ?? 100;
     const col = vCol(val / mx * 100);
     const R = 34, cx = 45, cy = 48;
@@ -524,7 +524,7 @@ function HMI_SensorLevel({ c, running }) {
         const id = setInterval(() =>
             setVal(v => +Math.max(0, Math.min(100, v + (Math.random() - 0.5) * 3)).toFixed(1)), 1800);
         return () => clearInterval(id);
-    }, [running]);
+    }, [c.value, running]);
     const col = vCol(val);
     return (
         <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center' }}>
@@ -558,7 +558,7 @@ function HMI_SensorPressure({ c, running }) {
         const id = setInterval(() =>
             setVal(+(base * (0.88 + Math.random() * 0.24)).toFixed(2)), 2000);
         return () => clearInterval(id);
-    }, [running]);
+    }, [c.value, running]);
     const col = val > (c.max ?? 10) * 0.8 ? '#e74c3c' : '#4a90d9';
     return (
         <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center' }}>
@@ -587,7 +587,7 @@ function HMI_SensorTemp({ c, running }) {
         const id = setInterval(() =>
             setVal(+(base + (Math.random() - 0.5) * 3).toFixed(1)), 2000);
         return () => clearInterval(id);
-    }, [running]);
+    }, [c.value, running]);
     const col = val > 80 ? '#e74c3c' : val > 50 ? '#f39c12' : '#4a90d9';
     return (
         <div data-interactive="true" style={{ position: 'absolute', left: c.x, top: c.y, textAlign: 'center' }}>

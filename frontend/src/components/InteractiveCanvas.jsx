@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useRef } from 'react';
+import { motion as Motion } from 'framer-motion';
 
 const InteractiveCanvas = ({ children, initialScale = 1 }) => {
     const containerRef = useRef(null);
@@ -8,9 +8,6 @@ const InteractiveCanvas = ({ children, initialScale = 1 }) => {
     const [isDragging, setIsDragging] = useState(false);
     const [dragCandidate, setDragCandidate] = useState(false);
     const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
-
-    // No auto-scaling - let content natural size
-    const effectiveScale = scale;
 
     const handleWheel = (e) => {
         if (e.ctrlKey || e.metaKey) {
@@ -94,7 +91,7 @@ const InteractiveCanvas = ({ children, initialScale = 1 }) => {
             />
 
             {/* Content Container - Enable pointer events for children */}
-            <motion.div
+            <Motion.div
                 style={{
                     width: '100%',
                     height: '100%',
@@ -109,7 +106,7 @@ const InteractiveCanvas = ({ children, initialScale = 1 }) => {
                 <div className="w-full h-full pointer-events-auto">
                     {children}
                 </div>
-            </motion.div>
+            </Motion.div>
 
             {/* Controls */}
             <div className="absolute bottom-6 right-6 flex gap-2 z-50">
